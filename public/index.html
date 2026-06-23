@@ -538,7 +538,6 @@
         <div class="page-sub" id="meals-count"></div>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-outline btn-sm" onclick="openImportModal()">Import</button>
         <button class="btn btn-outline btn-sm" onclick="openSuggestModal()">Suggest</button>
         <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add</button>
       </div>
@@ -1276,7 +1275,7 @@ async function fetchSuggestions() {
 
 async function addSuggestedMeal(idx, btn) {
   const meal = window._suggestedMeals[idx];
-  await api('POST', '/meals', { name: meal.name, notes: null, ingredients: meal.ingredients });
+  await api('POST', '/meals', { name: meal.name, notes: null, method: meal.method || null, ingredients: meal.ingredients });
   allMeals = await api('GET', '/meals');
   btn.textContent = 'Added';
   btn.disabled = true;

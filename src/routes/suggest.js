@@ -24,9 +24,10 @@ ${existing ? `We already have these meals in our library, so suggest different o
 Respond with ONLY a JSON array. No explanation, no markdown, just the raw JSON array. Each meal should have:
 - name: string
 - ingredients: array of { name, quantity, category } where category is one of: Produce, Meat & Seafood, Dairy, Pantry, Frozen, Bakery, Beverages, Household, Other
+- method: string with numbered step-by-step cooking instructions, each step on its own line like "1. Preheat oven to 400°F\n2. Season chicken..."
 
 Example format:
-[{"name":"Example Meal","ingredients":[{"name":"Chicken","quantity":"1 lb","category":"Meat & Seafood"}]}]`,
+[{"name":"Example Meal","ingredients":[{"name":"Chicken","quantity":"1 lb","category":"Meat & Seafood"}],"method":"1. Season chicken with salt and pepper.\n2. Heat oil in a pan over medium-high heat.\n3. Cook chicken 6 minutes per side until done."}]`,
     }],
   });
 
