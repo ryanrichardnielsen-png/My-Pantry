@@ -875,13 +875,28 @@ function openPickModal(dow, dayName) {
   if (!allMeals.length) {
     list.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">No meals in library yet.<br>Add some in the Meals tab.</p>';
   } else {
+    const grouped = {};
     allMeals.forEach(m => {
-      const row = document.createElement('div');
-      row.className = 'table-row';
-      row.style.cursor = 'pointer';
-      row.innerHTML = `<span class="table-row-name">${m.name}</span><span class="table-row-sub">${m.servings || 4} servings</span>`;
-      row.onclick = () => assignMeal(m.id);
-      list.appendChild(row);
+      const cat = m.meal_category || 'Dinner';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(m);
+    });
+    const catOrder = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+    const orderedCats = [...catOrder.filter(c => grouped[c]), ...Object.keys(grouped).filter(c => !catOrder.includes(c))];
+    orderedCats.forEach(cat => {
+      const wrap = document.createElement('div');
+      wrap.className = 'table-card';
+      wrap.style.marginBottom = '10px';
+      wrap.innerHTML = `<div class="table-card-header"><span class="table-card-title">${cat}</span></div>`;
+      grouped[cat].forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'table-row';
+        row.style.cursor = 'pointer';
+        row.innerHTML = `<span class="table-row-name">${m.name}</span><span class="table-row-sub">${m.servings || 4} servings</span>`;
+        row.onclick = () => assignMeal(m.id);
+        wrap.appendChild(row);
+      });
+      list.appendChild(wrap);
     });
   }
   document.getElementById('pick-modal').classList.add('open');
