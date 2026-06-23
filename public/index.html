@@ -534,6 +534,32 @@
     background: var(--card);
     border-radius: 14px 14px 0 0;
   }
+  .widget-tab {
+    flex: 1;
+    padding: 9px 0;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  .widget-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .scan-upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px 16px;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .scan-upload-area:hover { border-color: var(--orange); }
 </style>
 </head>
 <body>
@@ -724,16 +750,39 @@
 
 <div id="suggest-panel">
   <div class="suggest-panel-header">
-    <span style="font-size:13px;font-weight:700">Suggest Meals</span>
+    <span style="font-size:13px;font-weight:700">Add Recipes</span>
     <button class="modal-close" onclick="closeSuggestWidget()">✕</button>
   </div>
-  <div style="padding:14px">
+
+  <!-- Mode tabs -->
+  <div style="display:flex;border-bottom:1px solid var(--border)">
+    <button id="widget-tab-suggest" class="widget-tab active" onclick="switchWidgetTab('suggest')">Suggest</button>
+    <button id="widget-tab-scan" class="widget-tab" onclick="switchWidgetTab('scan')">Scan Recipe</button>
+  </div>
+
+  <!-- Suggest pane -->
+  <div id="widget-pane-suggest" style="padding:14px">
     <div class="form-row" style="margin-bottom:10px">
       <label>What are you in the mood for?</label>
       <input id="suggest-prompt" type="text" placeholder="e.g. cake, Italian, quick lunch…">
     </div>
     <button class="btn btn-orange btn-block" id="suggest-btn" onclick="fetchSuggestions()" style="margin-bottom:12px">Get Suggestions</button>
     <div id="suggest-results"></div>
+  </div>
+
+  <!-- Scan pane -->
+  <div id="widget-pane-scan" style="padding:14px;display:none">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Take a photo of a cookbook page or recipe card and Claude will extract it for you.</p>
+    <label class="scan-upload-area" id="scan-upload-label">
+      <input type="file" id="scan-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleScanFile(this)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);margin-bottom:8px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span id="scan-upload-text" style="font-size:12px;font-weight:600;color:var(--muted)">Tap to take a photo or choose an image</span>
+    </label>
+    <div id="scan-preview" style="display:none;margin-top:10px">
+      <img id="scan-preview-img" style="width:100%;border-radius:8px;border:1px solid var(--border);max-height:180px;object-fit:cover">
+      <button class="btn btn-orange btn-block" id="scan-btn" onclick="submitScan()" style="margin-top:10px">Read Recipe</button>
+    </div>
+    <div id="scan-result" style="margin-top:12px"></div>
   </div>
 </div>
 
@@ -1359,6 +1408,99 @@ function closeSuggestWidget() { document.getElementById('suggest-panel').classLi
 // keep old names working just in case
 function openSuggestModal() { toggleSuggestWidget(); }
 function closeSuggestModal() { closeSuggestWidget(); }
+
+function switchWidgetTab(tab) {
+  document.querySelectorAll('.widget-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`widget-tab-${tab}`).classList.add('active');
+  document.getElementById('widget-pane-suggest').style.display = tab === 'suggest' ? 'block' : 'none';
+  document.getElementById('widget-pane-scan').style.display = tab === 'scan' ? 'block' : 'none';
+}
+
+// ── Recipe scan (photo) ───────────────────────────────────
+let _scanFile = null;
+
+function handleScanFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  _scanFile = file;
+  const url = URL.createObjectURL(file);
+  document.getElementById('scan-preview-img').src = url;
+  document.getElementById('scan-preview').style.display = 'block';
+  document.getElementById('scan-upload-text').textContent = file.name;
+  document.getElementById('scan-result').innerHTML = '';
+}
+
+async function submitScan() {
+  if (!_scanFile) return;
+  const btn = document.getElementById('scan-btn');
+  const result = document.getElementById('scan-result');
+  btn.disabled = true;
+  btn.textContent = 'Reading…';
+  result.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Claude is reading the recipe…</p>';
+
+  try {
+    const base64 = await fileToBase64(_scanFile);
+    const mediaType = _scanFile.type || 'image/jpeg';
+    const data = await api('POST', '/scan', { image: base64, mediaType });
+
+    if (data.error) {
+      result.innerHTML = `<p style="color:#dc2626;font-size:12px">${data.error}</p>`;
+      btn.disabled = false; btn.textContent = 'Try Again'; return;
+    }
+
+    const r = data.recipe;
+    const ings = (r.ingredients || []).map(i =>
+      `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
+    ).join('');
+
+    result.innerHTML = `
+      <div class="table-card">
+        <div class="table-card-header">
+          <span style="font-size:13px;font-weight:700">${r.name}</span>
+          <span class="badge badge-low">${r.meal_category || 'Dinner'}</span>
+        </div>
+        ${ings ? `<div style="padding:10px 14px;border-bottom:1px solid #f0f2f5">${ings}</div>` : ''}
+        ${r.method ? `<div style="padding:10px 14px;font-size:12px;line-height:1.6;color:var(--muted);white-space:pre-line;border-bottom:1px solid #f0f2f5">${r.method}</div>` : ''}
+        <div style="padding:10px 14px">
+          <button class="btn btn-orange btn-block" onclick="saveScanResult()">Add to Library</button>
+        </div>
+      </div>`;
+    window._scannedRecipe = r;
+    btn.disabled = false; btn.textContent = 'Scan Another';
+  } catch (e) {
+    result.innerHTML = '<p style="color:#dc2626;font-size:12px">Something went wrong. Try again.</p>';
+    btn.disabled = false; btn.textContent = 'Try Again';
+  }
+}
+
+async function saveScanResult() {
+  const r = window._scannedRecipe;
+  if (!r) return;
+  await api('POST', '/meals', {
+    name: r.name,
+    notes: null,
+    method: r.method || null,
+    meal_category: r.meal_category || 'Dinner',
+    servings: r.servings || 4,
+    ingredients: r.ingredients || [],
+  });
+  allMeals = await api('GET', '/meals');
+  document.getElementById('scan-result').innerHTML = `<p style="color:#16a34a;font-size:12px;font-weight:600;text-align:center;padding:8px">${r.name} added to library.</p>`;
+  // reset scan pane
+  _scanFile = null;
+  document.getElementById('scan-preview').style.display = 'none';
+  document.getElementById('scan-upload-text').textContent = 'Tap to take a photo or choose an image';
+  document.getElementById('scan-file-input').value = '';
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 async function fetchSuggestions() {
   const prompt = document.getElementById('suggest-prompt').value.trim();

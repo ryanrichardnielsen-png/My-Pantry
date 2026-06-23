@@ -6,7 +6,7 @@ const { init } = require('./db');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/meals', require('./routes/meals'));
@@ -15,6 +15,7 @@ app.use('/api/grocery', require('./routes/grocery'));
 app.use('/api/staples', require('./routes/staples'));
 app.use('/api/suggest', require('./routes/suggest'));
 app.use('/api/import', require('./routes/import'));
+app.use('/api/scan', require('./routes/scan'));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
