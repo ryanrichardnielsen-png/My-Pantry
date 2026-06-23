@@ -745,7 +745,16 @@ async function fetchImport() {
   result.innerHTML = '<p style="color:var(--muted);text-align:center;padding:16px">Reading the page…</p>';
 
   try {
-    const data = await api('POST', '/import', { url });
+    // Fetch from browser to avoid server-side blocking
+    let html = '';
+    try {
+      const pageRes = await fetch(url);
+      html = await pageRes.text();
+    } catch (e) {
+      result.innerHTML = '<p style="color:#ef4444">Could not load that page. Make sure the URL is correct.</p>';
+      btn.disabled = false; btn.textContent = 'Try Again'; return;
+    }
+    const data = await api('POST', '/import', { html });
     if (data.error) { result.innerHTML = `<p style="color:#ef4444">${data.error}</p>`; btn.disabled = false; btn.textContent = 'Try Again'; return; }
     const r = data.recipe;
     const ings = (r.ingredients || []).map(i => `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
