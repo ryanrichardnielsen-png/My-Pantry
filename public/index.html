@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Pantry</title>
+<style>
+  :root {
+    --green: #2d6a4f;
+    --green-light: #40916c;
+    --green-pale: #d8f3dc;
+    --orange: #e07b39;
+    --bg: #f9f9f6;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+  header {
+    background: var(--green);
+    color: white;
+    padding: 16px 20px 0;
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 12px; }
+  nav { display: flex; gap: 4px; }
+  nav button {
+    flex: 1; padding: 10px 4px; border: none; background: transparent;
+    color: rgba(255,255,255,0.7); font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; border-bottom: 3px solid transparent; transition: all .15s;
+  }
+  nav button.active { color: white; border-bottom-color: white; }
+
+  main { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px;
+  }
+
+  h2 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--green); }
+  h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 16px; border-radius: 8px; border: none;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity .15s;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--green); color: var(--green); }
+  .btn-danger { background: transparent; border: 1.5px solid #ef4444; color: #ef4444; }
+  .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
+  .btn-icon { padding: 6px; border-radius: 6px; background: transparent; border: none; cursor: pointer; font-size: 1rem; color: var(--muted); }
+  .btn-icon:hover { background: var(--border); }
+  .btn-block { width: 100%; justify-content: center; }
+
+  input, select, textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 0.9rem; background: var(--bg);
+    color: var(--text); outline: none; transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--green); }
+  textarea { resize: vertical; min-height: 64px; }
+
+  .form-row { margin-bottom: 10px; }
+  .form-row label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
+  .row { display: flex; gap: 8px; align-items: center; }
+
+  /* Week planner */
+  .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .week-label { font-size: 0.9rem; font-weight: 600; }
+  .day-card {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 12px 14px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .day-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); width: 32px; flex-shrink: 0; }
+  .day-meal { flex: 1; }
+  .day-meal-name { font-size: 0.95rem; font-weight: 600; }
+  .day-meal-empty { font-size: 0.9rem; color: var(--muted); font-style: italic; }
+  .day-actions { display: flex; gap: 4px; }
+
+  /* Meals library */
+  .meal-card {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px; margin-bottom: 10px;
+  }
+  .meal-header { display: flex; align-items: center; justify-content: space-between; }
+  .meal-name { font-size: 0.95rem; font-weight: 700; }
+  .meal-actions { display: flex; gap: 4px; }
+  .meal-ingredients { margin-top: 8px; }
+  .ing-tag {
+    display: inline-block; background: var(--green-pale); color: var(--green);
+    border-radius: 100px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600;
+    margin: 2px 3px 2px 0;
+  }
+
+  /* Grocery list */
+  .grocery-category { margin-bottom: 16px; }
+  .grocery-category h3 { font-size: 0.85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .grocery-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .grocery-item:last-child { border-bottom: none; }
+  .grocery-check { width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border); cursor: pointer; flex-shrink: 0; appearance: none; }
+  .grocery-check:checked { background: var(--green); border-color: var(--green); background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
+  .grocery-item-text { flex: 1; font-size: 0.95rem; }
+  .grocery-qty { font-size: 0.85rem; color: var(--muted); }
+  label.crossed { text-decoration: line-through; color: var(--muted); }
+
+  /* Staples */
+  .staple-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .staple-item:last-child { border-bottom: none; }
+  .staple-low-toggle {
+    width: 36px; height: 20px; border-radius: 100px;
+    background: var(--border); border: none; cursor: pointer;
+    position: relative; flex-shrink: 0; transition: background .2s;
+  }
+  .staple-low-toggle::after {
+    content: ''; position: absolute; left: 2px; top: 2px;
+    width: 16px; height: 16px; border-radius: 50%; background: white;
+    transition: transform .2s;
+  }
+  .staple-low-toggle.low { background: var(--orange); }
+  .staple-low-toggle.low::after { transform: translateX(16px); }
+  .staple-name { flex: 1; font-size: 0.95rem; }
+  .staple-low-label { font-size: 0.75rem; color: var(--orange); font-weight: 700; }
+
+  /* Modal */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 200; align-items: flex-end; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 20px 20px 0 0;
+    padding: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .modal-title { font-size: 1.1rem; font-weight: 700; }
+
+  .ing-list { list-style: none; }
+  .ing-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .ing-row input { flex: 1; }
+  .ing-row .ing-qty { width: 80px; flex-shrink: 0; }
+  .ing-row .ing-cat { width: 110px; flex-shrink: 0; }
+
+  .tag-running-low { background: #fff3e0; color: var(--orange); border-radius: 100px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-state .emoji { font-size: 2.5rem; margin-bottom: 8px; }
+
+  .week-offset-display { font-size: 0.75rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🥦 My Pantry</h1>
+  <nav>
+    <button class="active" onclick="showTab('week')">Week</button>
+    <button onclick="showTab('meals')">Meals</button>
+    <button onclick="showTab('grocery')">Grocery</button>
+    <button onclick="showTab('staples')">Staples</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- WEEK TAB -->
+  <div id="tab-week" class="tab active">
+    <div class="week-nav">
+      <button class="btn btn-outline btn-sm" onclick="changeWeek(-1)">&#8592; Prev</button>
+      <div style="text-align:center">
+        <div class="week-label" id="week-label"></div>
+        <div class="week-offset-display" id="week-offset-label"></div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="changeWeek(1)">Next &#8594;</button>
+    </div>
+    <div id="week-days"></div>
+  </div>
+
+  <!-- MEALS TAB -->
+  <div id="tab-meals" class="tab">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h2 style="margin:0">Meal Library</h2>
+      <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add Meal</button>
+    </div>
+    <div id="meals-list"></div>
+  </div>
+
+  <!-- GROCERY TAB -->
+  <div id="tab-grocery" class="tab">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h2 style="margin:0">Grocery List</h2>
+      <button class="btn btn-outline btn-sm" onclick="loadGrocery()">&#8635; Refresh</button>
+    </div>
+    <div id="grocery-list"></div>
+  </div>
+
+  <!-- STAPLES TAB -->
+  <div id="tab-staples" class="tab">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <h2 style="margin:0">Staples</h2>
+      <button class="btn btn-primary btn-sm" onclick="openStapleModal()">+ Add</button>
+    </div>
+    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:14px;">Toggle the switch when you're running low — it'll appear on your grocery list.</p>
+    <div id="staples-list"></div>
+  </div>
+
+</main>
+
+<!-- MEAL MODAL -->
+<div class="modal-backdrop" id="meal-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="meal-modal-title">New Meal</span>
+      <button class="btn-icon" onclick="closeMealModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <label>Meal name</label>
+      <input id="meal-name" type="text" placeholder="e.g. Chicken Tacos">
+    </div>
+    <div class="form-row">
+      <label>Notes (optional)</label>
+      <textarea id="meal-notes" placeholder="Recipe link, tips, etc."></textarea>
+    </div>
+    <div class="form-row">
+      <label>Ingredients</label>
+      <ul class="ing-list" id="ing-list"></ul>
+      <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="addIngredientRow()">+ Add ingredient</button>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn btn-primary" style="flex:1" onclick="saveMeal()">Save Meal</button>
+      <button id="meal-delete-btn" class="btn btn-danger" style="display:none" onclick="deleteMeal()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- PICK MEAL MODAL (for week planner) -->
+<div class="modal-backdrop" id="pick-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="pick-modal-title">Choose Meal</span>
+      <button class="btn-icon" onclick="closePickModal()">✕</button>
+    </div>
+    <div id="pick-meal-list"></div>
+    <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="clearDayMeal()">Clear this day</button>
+  </div>
+</div>
+
+<!-- STAPLE MODAL -->
+<div class="modal-backdrop" id="staple-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Staple</span>
+      <button class="btn-icon" onclick="closeStapleModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <label>Item name</label>
+      <input id="staple-name" type="text" placeholder="e.g. Olive Oil">
+    </div>
+    <div class="form-row">
+      <label>Category</label>
+      <select id="staple-category">
+        <option>Pantry</option>
+        <option>Produce</option>
+        <option>Dairy</option>
+        <option>Meat & Seafood</option>
+        <option>Frozen</option>
+        <option>Bakery</option>
+        <option>Beverages</option>
+        <option>Household</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:16px" onclick="saveStaple()">Add Staple</button>
+  </div>
+</div>
+
+<script>
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const CATEGORIES = ['Produce','Meat & Seafood','Dairy','Pantry','Frozen','Bakery','Beverages','Household','Other'];
+
+let currentWeekOffset = 0;
+let allMeals = [];
+let editingMealId = null;
+let pickingDay = null;
+
+// ── Utilities ────────────────────────────────────────────
+function getWeekStart(offset = 0) {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff + offset * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+function formatWeekLabel(weekStart) {
+  const d = new Date(weekStart + 'T00:00:00Z');
+  const end = new Date(d); end.setUTCDate(end.getUTCDate() + 6);
+  const fmt = dt => dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return `${fmt(d)} – ${fmt(end)}`;
+}
+
+async function api(method, path, body) {
+  const res = await fetch('/api' + path, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ── Tab navigation ───────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('nav button')[['week','meals','grocery','staples'].indexOf(name)].classList.add('active');
+  if (name === 'week') loadWeek();
+  if (name === 'meals') loadMeals();
+  if (name === 'grocery') loadGrocery();
+  if (name === 'staples') loadStaples();
+}
+
+// ── Week planner ─────────────────────────────────────────
+function changeWeek(dir) { currentWeekOffset += dir; loadWeek(); }
+
+async function loadWeek() {
+  const week = getWeekStart(currentWeekOffset);
+  document.getElementById('week-label').textContent = formatWeekLabel(week);
+  document.getElementById('week-offset-label').textContent =
+    currentWeekOffset === 0 ? 'This week' : currentWeekOffset === 1 ? 'Next week' : currentWeekOffset === -1 ? 'Last week' : '';
+
+  const data = await api('GET', `/week?week=${week}`);
+  const byDay = {};
+  (data.days || []).forEach(d => byDay[d.day_of_week] = d);
+
+  const container = document.getElementById('week-days');
+  container.innerHTML = '';
+  for (let i = 1; i <= 7; i++) {
+    const dow = i % 7; // Mon=1..Sun=0
+    const entry = byDay[dow];
+    const div = document.createElement('div');
+    div.className = 'day-card';
+    div.innerHTML = `
+      <div class="day-label">${DAYS[i-1]}</div>
+      <div class="day-meal">
+        ${entry && entry.meal_name
+          ? `<div class="day-meal-name">${entry.meal_name}</div>`
+          : `<div class="day-meal-empty">No meal planned</div>`}
+      </div>
+      <div class="day-actions">
+        <button class="btn-icon" title="Pick meal" onclick="openPickModal(${dow}, '${DAYS[i-1]}')">✏️</button>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function openPickModal(dow, dayName) {
+  pickingDay = dow;
+  document.getElementById('pick-modal-title').textContent = `${dayName} — Choose Meal`;
+  const list = document.getElementById('pick-meal-list');
+  list.innerHTML = '';
+  if (!allMeals.length) {
+    list.innerHTML = '<p style="color:var(--muted); text-align:center; padding:20px">No meals in library yet.<br>Add some in the Meals tab!</p>';
+  } else {
+    allMeals.forEach(m => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-outline btn-block';
+      btn.style.marginBottom = '8px';
+      btn.textContent = m.name;
+      btn.onclick = () => assignMeal(m.id);
+      list.appendChild(btn);
+    });
+  }
+  document.getElementById('pick-modal').classList.add('open');
+}
+
+function closePickModal() { document.getElementById('pick-modal').classList.remove('open'); }
+
+async function assignMeal(mealId) {
+  const week = getWeekStart(currentWeekOffset);
+  await api('PUT', `/week/${pickingDay}`, { meal_id: mealId, week });
+  closePickModal();
+  loadWeek();
+}
+
+async function clearDayMeal() {
+  const week = getWeekStart(currentWeekOffset);
+  await api('DELETE', `/week/${pickingDay}?week=${week}`);
+  closePickModal();
+  loadWeek();
+}
+
+// ── Meal library ─────────────────────────────────────────
+async function loadMeals() {
+  allMeals = await api('GET', '/meals');
+  const container = document.getElementById('meals-list');
+  if (!allMeals.length) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🍳</div><p>No meals yet.<br>Add your first one!</p></div>`;
+    return;
+  }
+  container.innerHTML = '';
+  allMeals.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'meal-card';
+    const ings = (m.ingredients || []).map(i =>
+      `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
+    ).join('');
+    div.innerHTML = `
+      <div class="meal-header">
+        <span class="meal-name">${m.name}</span>
+        <div class="meal-actions">
+          <button class="btn-icon" onclick="openMealModal(${m.id})">✏️</button>
+        </div>
+      </div>
+      ${m.notes ? `<div style="font-size:0.82rem; color:var(--muted); margin-top:4px">${m.notes}</div>` : ''}
+      ${ings ? `<div class="meal-ingredients" style="margin-top:8px">${ings}</div>` : ''}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function openMealModal(id) {
+  editingMealId = id || null;
+  document.getElementById('meal-modal-title').textContent = id ? 'Edit Meal' : 'New Meal';
+  document.getElementById('meal-delete-btn').style.display = id ? 'block' : 'none';
+  document.getElementById('ing-list').innerHTML = '';
+
+  if (id) {
+    const meal = allMeals.find(m => m.id === id);
+    document.getElementById('meal-name').value = meal.name;
+    document.getElementById('meal-notes').value = meal.notes || '';
+    (meal.ingredients || []).forEach(i => addIngredientRow(i));
+  } else {
+    document.getElementById('meal-name').value = '';
+    document.getElementById('meal-notes').value = '';
+    addIngredientRow();
+  }
+  document.getElementById('meal-modal').classList.add('open');
+}
+
+function closeMealModal() { document.getElementById('meal-modal').classList.remove('open'); }
+
+function addIngredientRow(ing) {
+  const li = document.createElement('li');
+  li.className = 'ing-row';
+  li.innerHTML = `
+    <input type="text" class="ing-name" placeholder="Ingredient" value="${ing ? ing.name : ''}">
+    <input type="text" class="ing-qty" placeholder="Qty" value="${ing && ing.quantity ? ing.quantity : ''}">
+    <select class="ing-cat">
+      ${CATEGORIES.map(c => `<option ${ing && ing.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+    </select>
+    <button class="btn-icon" onclick="this.closest('li').remove()">🗑</button>
+  `;
+  document.getElementById('ing-list').appendChild(li);
+}
+
+async function saveMeal() {
+  const name = document.getElementById('meal-name').value.trim();
+  if (!name) return alert('Please enter a meal name.');
+  const notes = document.getElementById('meal-notes').value.trim();
+  const ingredients = [...document.querySelectorAll('#ing-list .ing-row')]
+    .map(row => ({
+      name: row.querySelector('.ing-name').value.trim(),
+      quantity: row.querySelector('.ing-qty').value.trim(),
+      category: row.querySelector('.ing-cat').value,
+    }))
+    .filter(i => i.name);
+
+  if (editingMealId) {
+    await api('PUT', `/meals/${editingMealId}`, { name, notes, ingredients });
+  } else {
+    await api('POST', '/meals', { name, notes, ingredients });
+  }
+  closeMealModal();
+  loadMeals();
+}
+
+async function deleteMeal() {
+  if (!confirm('Delete this meal?')) return;
+  await api('DELETE', `/meals/${editingMealId}`);
+  closeMealModal();
+  loadMeals();
+}
+
+// ── Grocery list ─────────────────────────────────────────
+async function loadGrocery() {
+  const week = getWeekStart(currentWeekOffset);
+  const data = await api('GET', `/grocery?week=${week}`);
+  const container = document.getElementById('grocery-list');
+  const cats = data.categories || {};
+  const keys = Object.keys(cats);
+
+  if (!keys.length) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🛒</div><p>Nothing on the list yet.<br>Plan your week or mark staples as low.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  const orderedKeys = [...CATEGORIES.filter(c => cats[c]), ...keys.filter(k => !CATEGORIES.includes(k))];
+  orderedKeys.forEach(cat => {
+    const items = cats[cat];
+    const div = document.createElement('div');
+    div.className = 'grocery-category card';
+    div.innerHTML = `<h3>${cat}</h3>` + items.map((item, idx) => {
+      const uid = `g-${cat}-${idx}`;
+      return `
+        <div class="grocery-item">
+          <input type="checkbox" class="grocery-check" id="${uid}" onchange="toggleGroceryItem(this)">
+          <label for="${uid}" class="grocery-item-text">${item.name}${item.quantity ? `<span class="grocery-qty"> — ${item.quantity}</span>` : ''}</label>
+        </div>`;
+    }).join('');
+    container.appendChild(div);
+  });
+}
+
+function toggleGroceryItem(checkbox) {
+  const label = checkbox.nextElementSibling;
+  if (checkbox.checked) label.classList.add('crossed');
+  else label.classList.remove('crossed');
+}
+
+// ── Staples ───────────────────────────────────────────────
+async function loadStaples() {
+  const staples = await api('GET', '/staples');
+  const container = document.getElementById('staples-list');
+  if (!staples.length) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🧂</div><p>No staples tracked yet.<br>Add things like olive oil, salt, pasta.</p></div>`;
+    return;
+  }
+
+  // Group by category
+  const grouped = {};
+  staples.forEach(s => {
+    if (!grouped[s.category]) grouped[s.category] = [];
+    grouped[s.category].push(s);
+  });
+
+  container.innerHTML = '';
+  Object.entries(grouped).forEach(([cat, items]) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `<h3 style="font-size:0.82rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px">${cat}</h3>` +
+      items.map(s => `
+        <div class="staple-item">
+          <button class="staple-low-toggle ${s.is_low ? 'low' : ''}" id="toggle-${s.id}" onclick="toggleStaple(${s.id}, this)"></button>
+          <span class="staple-name">${s.name}</span>
+          ${s.is_low ? '<span class="staple-low-label">LOW</span>' : ''}
+          <button class="btn-icon" onclick="deleteStaple(${s.id})">🗑</button>
+        </div>
+      `).join('');
+    container.appendChild(div);
+  });
+}
+
+async function toggleStaple(id, btn) {
+  const isLow = !btn.classList.contains('low');
+  await api('PUT', `/staples/${id}`, { is_low: isLow });
+  loadStaples();
+}
+
+async function deleteStaple(id) {
+  await api('DELETE', `/staples/${id}`);
+  loadStaples();
+}
+
+function openStapleModal() { document.getElementById('staple-modal').classList.add('open'); document.getElementById('staple-name').value = ''; }
+function closeStapleModal() { document.getElementById('staple-modal').classList.remove('open'); }
+
+async function saveStaple() {
+  const name = document.getElementById('staple-name').value.trim();
+  if (!name) return alert('Please enter an item name.');
+  const category = document.getElementById('staple-category').value;
+  await api('POST', '/staples', { name, category });
+  closeStapleModal();
+  loadStaples();
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+});
+
+// Init
+(async () => {
+  allMeals = await api('GET', '/meals');
+  loadWeek();
+})();
+</script>
+</body>
+</html>
