@@ -32,10 +32,13 @@ Example format:
 
   try {
     const text = message.content[0].text.trim();
-    const meals = JSON.parse(text);
+    // Strip markdown code fences if present
+    const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
+    const meals = JSON.parse(cleaned);
     res.json({ meals });
   } catch (e) {
-    res.status(500).json({ error: 'Failed to parse meal suggestions' });
+    console.error('Suggest parse error:', e.message, message.content[0].text);
+    res.status(500).json({ error: 'Failed to parse meal suggestions', raw: message.content[0].text });
   }
 });
 
