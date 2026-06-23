@@ -481,6 +481,59 @@
   /* ── EMPTY STATE ── */
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
   .empty-state p { margin-top: 8px; line-height: 1.5; }
+
+  /* ── FLOATING SUGGEST WIDGET ── */
+  #suggest-bubble {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 300;
+    box-shadow: 0 4px 16px rgba(224,110,46,.45);
+    transition: transform .15s, box-shadow .15s;
+  }
+  #suggest-bubble:hover { transform: scale(1.07); box-shadow: 0 6px 20px rgba(224,110,46,.55); }
+  #suggest-bubble:active { transform: scale(.96); }
+
+  #suggest-panel {
+    position: fixed;
+    bottom: 82px;
+    right: 16px;
+    width: 320px;
+    max-height: 70vh;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.14);
+    z-index: 299;
+    overflow-y: auto;
+    display: none;
+    animation: slideUp .18s ease;
+  }
+  #suggest-panel.open { display: block; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .suggest-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--card);
+    border-radius: 14px 14px 0 0;
+  }
 </style>
 </head>
 <body>
@@ -538,7 +591,6 @@
         <div class="page-sub" id="meals-count"></div>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-outline btn-sm" onclick="openSuggestModal()">Suggest</button>
         <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add</button>
       </div>
     </div>
@@ -661,18 +713,26 @@
   </div>
 </div>
 
-<!-- SUGGEST MODAL -->
-<div class="modal-backdrop" id="suggest-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">Suggest Meals</span>
-      <button class="modal-close" onclick="closeSuggestModal()">✕</button>
+<!-- FLOATING SUGGEST WIDGET -->
+<div id="suggest-bubble" onclick="toggleSuggestWidget()" title="Suggest meals">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10a10 10 0 0 1-10-10C2 6.48 6.48 2 12 2z"/>
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+</div>
+
+<div id="suggest-panel">
+  <div class="suggest-panel-header">
+    <span style="font-size:13px;font-weight:700">Suggest Meals</span>
+    <button class="modal-close" onclick="closeSuggestWidget()">✕</button>
+  </div>
+  <div style="padding:14px">
+    <div class="form-row" style="margin-bottom:10px">
+      <label>What are you in the mood for?</label>
+      <input id="suggest-prompt" type="text" placeholder="e.g. cake, Italian, quick lunch…">
     </div>
-    <div class="form-row">
-      <label>What are you in the mood for? (optional)</label>
-      <input id="suggest-prompt" type="text" placeholder="e.g. quick weeknights, Italian, light meals…">
-    </div>
-    <button class="btn btn-primary btn-block" id="suggest-btn" onclick="fetchSuggestions()" style="margin-bottom:14px">Get Suggestions</button>
+    <button class="btn btn-orange btn-block" id="suggest-btn" onclick="fetchSuggestions()" style="margin-bottom:12px">Get Suggestions</button>
     <div id="suggest-results"></div>
   </div>
 </div>
@@ -1281,15 +1341,24 @@ async function saveImportedRecipe() {
   loadMeals();
 }
 
-// ── AI Suggestions ───────────────────────────────────────
-function openSuggestModal() {
-  document.getElementById('suggest-prompt').value = '';
-  document.getElementById('suggest-results').innerHTML = '';
-  document.getElementById('suggest-btn').disabled = false;
-  document.getElementById('suggest-btn').textContent = 'Get Suggestions';
-  document.getElementById('suggest-modal').classList.add('open');
+// ── AI Suggestions (floating widget) ─────────────────────
+function toggleSuggestWidget() {
+  const panel = document.getElementById('suggest-panel');
+  if (panel.classList.contains('open')) {
+    closeSuggestWidget();
+  } else {
+    document.getElementById('suggest-prompt').value = '';
+    document.getElementById('suggest-results').innerHTML = '';
+    document.getElementById('suggest-btn').disabled = false;
+    document.getElementById('suggest-btn').textContent = 'Get Suggestions';
+    panel.classList.add('open');
+    setTimeout(() => document.getElementById('suggest-prompt').focus(), 50);
+  }
 }
-function closeSuggestModal() { document.getElementById('suggest-modal').classList.remove('open'); }
+function closeSuggestWidget() { document.getElementById('suggest-panel').classList.remove('open'); }
+// keep old names working just in case
+function openSuggestModal() { toggleSuggestWidget(); }
+function closeSuggestModal() { closeSuggestWidget(); }
 
 async function fetchSuggestions() {
   const prompt = document.getElementById('suggest-prompt').value.trim();
@@ -1340,6 +1409,15 @@ async function addSuggestedMeal(idx, btn) {
 // Close modals on backdrop click
 document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
   backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+});
+
+// Close suggest widget on outside click
+document.addEventListener('click', e => {
+  const panel = document.getElementById('suggest-panel');
+  const bubble = document.getElementById('suggest-bubble');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !bubble.contains(e.target)) {
+    closeSuggestWidget();
+  }
 });
 
 // Init
