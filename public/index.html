@@ -772,15 +772,20 @@
 
   <!-- Scan pane -->
   <div id="widget-pane-scan" style="padding:14px;display:none">
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Take a photo of a cookbook page or recipe card and Claude will extract it for you.</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">Photograph each page of the recipe, then tap Read Recipe when done.</p>
+
+    <!-- Page thumbnails -->
+    <div id="scan-pages" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+
+    <!-- Upload button -->
     <label class="scan-upload-area" id="scan-upload-label">
       <input type="file" id="scan-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleScanFile(this)">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);margin-bottom:8px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      <span id="scan-upload-text" style="font-size:12px;font-weight:600;color:var(--muted)">Tap to take a photo or choose an image</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);margin-bottom:6px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span id="scan-upload-text" style="font-size:12px;font-weight:600;color:var(--muted)">Tap to photograph a page</span>
     </label>
-    <div id="scan-preview" style="display:none;margin-top:10px">
-      <img id="scan-preview-img" style="width:100%;border-radius:8px;border:1px solid var(--border);max-height:180px;object-fit:cover">
-      <button class="btn btn-orange btn-block" id="scan-btn" onclick="submitScan()" style="margin-top:10px">Read Recipe</button>
+
+    <div id="scan-actions" style="display:none;margin-top:10px;display:none">
+      <button class="btn btn-orange btn-block" id="scan-btn" onclick="submitScan()">Read Recipe</button>
     </div>
     <div id="scan-result" style="margin-top:12px"></div>
   </div>
@@ -1416,36 +1421,66 @@ function switchWidgetTab(tab) {
   document.getElementById('widget-pane-scan').style.display = tab === 'scan' ? 'block' : 'none';
 }
 
-// ── Recipe scan (photo) ───────────────────────────────────
-let _scanFile = null;
+// ── Recipe scan (photo, multi-page) ──────────────────────
+let _scanPages = []; // array of { file, url }
 
 function handleScanFile(input) {
   const file = input.files[0];
   if (!file) return;
-  _scanFile = file;
+  input.value = ''; // reset so same file can be re-added if needed
+
   const url = URL.createObjectURL(file);
-  document.getElementById('scan-preview-img').src = url;
-  document.getElementById('scan-preview').style.display = 'block';
-  document.getElementById('scan-upload-text').textContent = file.name;
+  _scanPages.push({ file, url });
+  renderScanPages();
   document.getElementById('scan-result').innerHTML = '';
 }
 
+function renderScanPages() {
+  const container = document.getElementById('scan-pages');
+  const actions = document.getElementById('scan-actions');
+  container.innerHTML = '';
+
+  _scanPages.forEach((p, idx) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;flex-shrink:0';
+    wrap.innerHTML = `
+      <img src="${p.url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+      <span style="position:absolute;top:3px;left:5px;font-size:9px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)">P${idx + 1}</span>
+      <button onclick="removeScanPage(${idx})" style="position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--dark);border:none;color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>`;
+    container.appendChild(wrap);
+  });
+
+  const hasPages = _scanPages.length > 0;
+  actions.style.display = hasPages ? 'block' : 'none';
+  document.getElementById('scan-upload-text').textContent = hasPages
+    ? `Add another page (${_scanPages.length} so far)`
+    : 'Tap to photograph a page';
+}
+
+function removeScanPage(idx) {
+  _scanPages.splice(idx, 1);
+  renderScanPages();
+}
+
 async function submitScan() {
-  if (!_scanFile) return;
+  if (!_scanPages.length) return;
   const btn = document.getElementById('scan-btn');
   const result = document.getElementById('scan-result');
   btn.disabled = true;
-  btn.textContent = 'Reading…';
+  btn.textContent = `Reading ${_scanPages.length} page${_scanPages.length > 1 ? 's' : ''}…`;
   result.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Claude is reading the recipe…</p>';
 
   try {
-    const base64 = await fileToBase64(_scanFile);
-    const mediaType = _scanFile.type || 'image/jpeg';
-    const data = await api('POST', '/scan', { image: base64, mediaType });
+    const images = await Promise.all(_scanPages.map(async p => ({
+      image: await fileToBase64(p.file),
+      mediaType: p.file.type || 'image/jpeg',
+    })));
+
+    const data = await api('POST', '/scan', { images });
 
     if (data.error) {
       result.innerHTML = `<p style="color:#dc2626;font-size:12px">${data.error}</p>`;
-      btn.disabled = false; btn.textContent = 'Try Again'; return;
+      btn.disabled = false; btn.textContent = 'Read Recipe'; return;
     }
 
     const r = data.recipe;
@@ -1466,10 +1501,10 @@ async function submitScan() {
         </div>
       </div>`;
     window._scannedRecipe = r;
-    btn.disabled = false; btn.textContent = 'Scan Another';
+    btn.disabled = false; btn.textContent = 'Read Recipe';
   } catch (e) {
     result.innerHTML = '<p style="color:#dc2626;font-size:12px">Something went wrong. Try again.</p>';
-    btn.disabled = false; btn.textContent = 'Try Again';
+    btn.disabled = false; btn.textContent = 'Read Recipe';
   }
 }
 
@@ -1486,11 +1521,8 @@ async function saveScanResult() {
   });
   allMeals = await api('GET', '/meals');
   document.getElementById('scan-result').innerHTML = `<p style="color:#16a34a;font-size:12px;font-weight:600;text-align:center;padding:8px">${r.name} added to library.</p>`;
-  // reset scan pane
-  _scanFile = null;
-  document.getElementById('scan-preview').style.display = 'none';
-  document.getElementById('scan-upload-text').textContent = 'Tap to take a photo or choose an image';
-  document.getElementById('scan-file-input').value = '';
+  _scanPages = [];
+  renderScanPages();
 }
 
 function fileToBase64(file) {
