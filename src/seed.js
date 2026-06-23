@@ -5,6 +5,7 @@ const meals = [
   {
     name: 'Chicken Tacos',
     notes: null,
+    servings: 4,
     method: `1. Season chicken thighs with salt, pepper, cumin, and chili powder.
 2. Heat a skillet over medium-high heat with a drizzle of oil.
 3. Cook chicken thighs 6-7 minutes per side until cooked through. Let rest 5 minutes, then slice or shred.
@@ -25,6 +26,7 @@ const meals = [
   {
     name: 'Spaghetti Bolognese',
     notes: null,
+    servings: 4,
     method: `1. Heat olive oil in a large pan over medium heat. Add diced onion and carrot, cook 5 minutes until soft.
 2. Add garlic and cook 1 minute more.
 3. Add ground beef, breaking it up with a spoon. Cook until browned, about 8 minutes.
@@ -47,6 +49,7 @@ const meals = [
   {
     name: 'Sheet Pan Salmon',
     notes: null,
+    servings: 4,
     method: `1. Preheat oven to 400°F.
 2. Whisk together olive oil, soy sauce, honey, and minced garlic.
 3. Cut broccoli into florets and toss with half the sauce. Spread on a sheet pan.
@@ -66,6 +69,7 @@ const meals = [
   {
     name: 'Chicken Stir Fry',
     notes: null,
+    servings: 4,
     method: `1. Cook white rice according to package directions.
 2. Slice chicken breast into thin strips. Season with salt and pepper.
 3. Mix together soy sauce, sesame oil, and a pinch of sugar in a small bowl. Set aside.
@@ -89,6 +93,7 @@ const meals = [
   {
     name: 'Homemade Pizza',
     notes: null,
+    servings: 4,
     method: `1. Preheat oven to 475°F with a pizza stone or baking sheet inside.
 2. Stretch pizza dough on a floured surface to your desired shape and thickness.
 3. Brush dough lightly with olive oil. Spread marinara sauce, leaving a 1-inch border.
@@ -109,6 +114,7 @@ const meals = [
   {
     name: 'Black Bean Burrito Bowls',
     notes: null,
+    servings: 4,
     method: `1. Cook rice according to package directions. Fluff with a fork and stir in lime juice and cilantro.
 2. Drain and rinse black beans. Warm in a small pot with a pinch of cumin and salt.
 3. Drain corn and warm in a pan or microwave.
@@ -130,6 +136,7 @@ const meals = [
   {
     name: 'Beef Tacos',
     notes: null,
+    servings: 4,
     method: `1. Brown ground beef in a skillet over medium-high heat, breaking it up as it cooks.
 2. Drain excess fat. Add taco seasoning and 2/3 cup water. Stir and simmer 3-4 minutes.
 3. Warm corn tortillas in a dry pan for 30 seconds per side.
@@ -150,6 +157,7 @@ const meals = [
   {
     name: 'Chicken Caesar Salad',
     notes: null,
+    servings: 2,
     method: `1. Season chicken breasts with salt, pepper, and a drizzle of olive oil.
 2. Grill or pan-sear over medium-high heat, 6-7 minutes per side. Let rest 5 minutes, then slice.
 3. Chop romaine into bite-sized pieces and place in a large bowl.
@@ -168,6 +176,7 @@ const meals = [
   {
     name: 'Shrimp Pasta',
     notes: null,
+    servings: 4,
     method: `1. Cook linguine according to package directions. Reserve 1/2 cup pasta water before draining.
 2. Pat shrimp dry and season with salt, pepper, and red pepper flakes.
 3. Heat olive oil and 2 tbsp butter in a large pan over medium-high heat.
@@ -191,6 +200,7 @@ const meals = [
   {
     name: 'Turkey Burgers',
     notes: null,
+    servings: 4,
     method: `1. Mix ground turkey with salt, pepper, garlic powder, and Worcestershire sauce. Form into 4 patties.
 2. Heat a grill or skillet over medium-high heat with oil.
 3. Cook patties 5-6 minutes per side until cooked through (165°F internal).
@@ -212,6 +222,7 @@ const meals = [
   {
     name: 'Vegetable Curry',
     notes: null,
+    servings: 4,
     method: `1. Cook rice according to package directions.
 2. Heat oil in a large pot over medium heat. Add diced onion and cook 5 minutes.
 3. Add garlic, ginger, and curry powder. Stir and cook 1-2 minutes until fragrant.
@@ -234,6 +245,7 @@ const meals = [
   {
     name: 'Pork Fried Rice',
     notes: null,
+    servings: 4,
     method: `1. Use day-old cooked rice for best results (or cook and spread to cool first).
 2. Slice pork tenderloin thin and season with soy sauce and pepper.
 3. Heat oil in a wok or large skillet over high heat. Cook pork 3-4 minutes. Remove.
@@ -257,6 +269,7 @@ const meals = [
   {
     name: 'Grilled Cheese & Tomato Soup',
     notes: null,
+    servings: 4,
     method: `1. Heat tomato soup in a pot over medium heat, stirring occasionally. Stir in heavy cream and season with salt and pepper.
 2. Butter one side of each bread slice.
 3. Place a slice butter-side down in a skillet over medium-low heat.
@@ -275,6 +288,7 @@ const meals = [
   {
     name: 'Baked Chicken Thighs',
     notes: null,
+    servings: 4,
     method: `1. Preheat oven to 425°F.
 2. Cut potatoes into chunks and toss with olive oil, salt, and pepper. Spread on a baking sheet.
 3. Pat chicken thighs dry. Rub with olive oil, minced garlic, paprika, salt, and pepper.
@@ -294,6 +308,7 @@ const meals = [
   {
     name: 'Pesto Pasta',
     notes: null,
+    servings: 4,
     method: `1. Cook penne according to package directions. Reserve 1/2 cup pasta water before draining.
 2. While pasta cooks, halve cherry tomatoes and mince garlic.
 3. Heat olive oil in a pan over medium heat. Add garlic and cook 1 minute.
@@ -348,8 +363,8 @@ async function seed() {
 
     for (const meal of meals) {
       const { rows: [m] } = await client.query(
-        'INSERT INTO meals (name, notes, method) VALUES ($1, $2, $3) RETURNING id',
-        [meal.name, meal.notes, meal.method]
+        'INSERT INTO meals (name, notes, method, servings) VALUES ($1, $2, $3, $4) RETURNING id',
+        [meal.name, meal.notes, meal.method, meal.servings || 4]
       );
       for (const ing of meal.ingredients) {
         await client.query(

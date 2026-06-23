@@ -18,6 +18,7 @@ async function init() {
 
     ALTER TABLE meals ADD COLUMN IF NOT EXISTS method TEXT;
     ALTER TABLE meals ADD COLUMN IF NOT EXISTS source_url TEXT;
+    ALTER TABLE meals ADD COLUMN IF NOT EXISTS servings INTEGER DEFAULT 4;
 
     CREATE TABLE IF NOT EXISTS ingredients (
       id SERIAL PRIMARY KEY,
