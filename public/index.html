@@ -195,9 +195,12 @@
 
   <!-- MEALS TAB -->
   <div id="tab-meals" class="tab">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h2 style="margin:0">Meal Library</h2>
-      <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add Meal</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="openSuggestModal()">✨ Suggest</button>
+        <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add</button>
+      </div>
     </div>
     <div id="meals-list"></div>
   </div>
@@ -259,6 +262,22 @@
     </div>
     <div id="pick-meal-list"></div>
     <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="clearDayMeal()">Clear this day</button>
+  </div>
+</div>
+
+<!-- SUGGEST MODAL -->
+<div class="modal-backdrop" id="suggest-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">✨ Suggest Meals</span>
+      <button class="btn-icon" onclick="closeSuggestModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <label>What are you in the mood for? (optional)</label>
+      <input id="suggest-prompt" type="text" placeholder="e.g. quick weeknights, something Italian, light meals…">
+    </div>
+    <button class="btn btn-primary btn-block" id="suggest-btn" onclick="fetchSuggestions()" style="margin-bottom:14px">Get Suggestions</button>
+    <div id="suggest-results"></div>
   </div>
 </div>
 
@@ -592,6 +611,69 @@ async function saveStaple() {
   await api('POST', '/staples', { name, category });
   closeStapleModal();
   loadStaples();
+}
+
+// ── AI Suggestions ───────────────────────────────────────
+function openSuggestModal() {
+  document.getElementById('suggest-prompt').value = '';
+  document.getElementById('suggest-results').innerHTML = '';
+  document.getElementById('suggest-btn').disabled = false;
+  document.getElementById('suggest-btn').textContent = 'Get Suggestions';
+  document.getElementById('suggest-modal').classList.add('open');
+}
+function closeSuggestModal() { document.getElementById('suggest-modal').classList.remove('open'); }
+
+async function fetchSuggestions() {
+  const prompt = document.getElementById('suggest-prompt').value.trim();
+  const btn = document.getElementById('suggest-btn');
+  const results = document.getElementById('suggest-results');
+  btn.disabled = true;
+  btn.textContent = 'Thinking…';
+  results.innerHTML = '<p style="color:var(--muted);text-align:center;padding:16px">Generating ideas…</p>';
+
+  try {
+    const data = await api('POST', '/suggest', { prompt });
+    if (!data.meals || !data.meals.length) {
+      results.innerHTML = '<p style="color:var(--muted)">No suggestions returned. Try again.</p>';
+      btn.disabled = false; btn.textContent = 'Get Suggestions';
+      return;
+    }
+    results.innerHTML = '';
+    data.meals.forEach((meal, idx) => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.marginBottom = '10px';
+      const ings = (meal.ingredients || []).map(i =>
+        `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
+      ).join('');
+      div.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <strong style="font-size:0.95rem">${meal.name}</strong>
+          <button class="btn btn-primary btn-sm" onclick="addSuggestedMeal(${idx})">+ Add</button>
+        </div>
+        <div>${ings}</div>
+      `;
+      div.dataset.meal = JSON.stringify(meal);
+      results.appendChild(div);
+    });
+    window._suggestedMeals = data.meals;
+  } catch (e) {
+    results.innerHTML = '<p style="color:#ef4444">Something went wrong. Try again.</p>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Get More';
+}
+
+async function addSuggestedMeal(idx) {
+  const meal = window._suggestedMeals[idx];
+  await api('POST', '/meals', { name: meal.name, notes: null, ingredients: meal.ingredients });
+  allMeals = await api('GET', '/meals');
+  // Mark button as added
+  const cards = document.querySelectorAll('#suggest-results .card');
+  const btn = cards[idx].querySelector('button');
+  btn.textContent = '✓ Added';
+  btn.disabled = true;
+  btn.style.background = 'var(--green-light)';
 }
 
 // Close modals on backdrop click
