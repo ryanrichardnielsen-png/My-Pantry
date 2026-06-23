@@ -764,7 +764,7 @@
   <div id="widget-pane-suggest" style="padding:14px">
     <div class="form-row" style="margin-bottom:10px">
       <label>What are you in the mood for?</label>
-      <input id="suggest-prompt" type="text" placeholder="e.g. cake, Italian, quick lunch…">
+      <input id="suggest-prompt" type="text" placeholder="e.g. Italian pasta, or how long does salmon keep?">
     </div>
     <button class="btn btn-orange btn-block" id="suggest-btn" onclick="fetchSuggestions()" style="margin-bottom:12px">Get Suggestions</button>
     <div id="suggest-results"></div>
@@ -1544,9 +1544,20 @@ async function fetchSuggestions() {
 
   try {
     const data = await api('POST', '/suggest', { prompt });
+
+    // Plain text answer to a question
+    if (data.answer) {
+      results.innerHTML = `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6;color:var(--text)">
+          ${data.answer}
+        </div>`;
+      btn.disabled = false; btn.textContent = 'Ask another';
+      return;
+    }
+
     if (!data.meals || !data.meals.length) {
       results.innerHTML = '<p style="color:var(--muted)">No suggestions returned. Try again.</p>';
-      btn.disabled = false; btn.textContent = 'Get Suggestions';
+      btn.disabled = false; btn.textContent = 'Try again';
       return;
     }
     results.innerHTML = '';
@@ -1568,7 +1579,7 @@ async function fetchSuggestions() {
     results.innerHTML = '<p style="color:#dc2626">Something went wrong. Try again.</p>';
   }
   btn.disabled = false;
-  btn.textContent = 'Get More';
+  btn.textContent = 'Ask again';
 }
 
 async function addSuggestedMeal(idx, btn) {
