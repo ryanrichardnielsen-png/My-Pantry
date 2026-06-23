@@ -20,14 +20,28 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Could not fetch that URL. Make sure it is a valid recipe page.' });
   }
 
-  // Strip HTML tags to get readable text, keep it under ~8000 chars
-  const text = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 8000);
+  // Most recipe sites embed structured JSON-LD data even if the page needs JS
+  let text = '';
+
+  const jsonLdMatches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+  for (const block of jsonLdMatches) {
+    const inner = block.replace(/<[^>]+>/g, '').trim();
+    if (inner.includes('Recipe') || inner.includes('ingredient') || inner.includes('instruction')) {
+      text = inner.slice(0, 8000);
+      break;
+    }
+  }
+
+  // Fall back to stripped HTML text if no JSON-LD found
+  if (!text) {
+    text = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 8000);
+  }
 
   const message = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',
