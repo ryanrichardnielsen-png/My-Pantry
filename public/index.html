@@ -1330,7 +1330,7 @@ async function fetchSuggestions() {
 
 async function addSuggestedMeal(idx, btn) {
   const meal = window._suggestedMeals[idx];
-  await api('POST', '/meals', { name: meal.name, notes: null, method: meal.method || null, ingredients: meal.ingredients });
+  await api('POST', '/meals', { name: meal.name, notes: null, method: meal.method || null, meal_category: meal.meal_category || 'Dinner', ingredients: meal.ingredients });
   allMeals = await api('GET', '/meals');
   btn.textContent = 'Added';
   btn.disabled = true;
