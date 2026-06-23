@@ -4,177 +4,492 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Pantry</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
   :root {
-    --green: #2d6a4f;
-    --green-light: #40916c;
-    --green-pale: #d8f3dc;
-    --orange: #e07b39;
-    --bg: #f9f9f6;
-    --card: #ffffff;
-    --text: #1a1a1a;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --radius: 12px;
-    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+    --orange:  #e06e2e;
+    --dark:    #0f1117;
+    --bg:      #f4f5f7;
+    --card:    #ffffff;
+    --border:  #e8eaed;
+    --text:    #1a1a1a;
+    --muted:   #888;
+    --radius:  10px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
 
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
   header {
-    background: var(--green);
-    color: white;
-    padding: 16px 20px 0;
-    position: sticky; top: 0; z-index: 100;
+    background: var(--dark);
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    gap: 16px;
   }
-  header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 12px; }
-  nav { display: flex; gap: 4px; }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+  }
+  .header-mark {
+    width: 26px;
+    height: 26px;
+    background: var(--orange);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    font-style: italic;
+    letter-spacing: -0.5px;
+  }
+  .header-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.2px;
+  }
+
+  /* ── NAV PILLS ── */
+  nav {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+    justify-content: flex-end;
+  }
   nav button {
-    flex: 1; padding: 10px 4px; border: none; background: transparent;
-    color: rgba(255,255,255,0.7); font-size: 0.8rem; font-weight: 600;
-    cursor: pointer; border-bottom: 3px solid transparent; transition: all .15s;
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.45);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
   }
-  nav button.active { color: white; border-bottom-color: white; }
+  nav button:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.8); }
+  nav button.active { background: rgba(255,255,255,.12); color: #fff; }
 
-  main { padding: 16px; max-width: 600px; margin: 0 auto; }
-
+  /* ── LAYOUT ── */
+  main { padding: 20px 16px; max-width: 600px; margin: 0 auto; }
   .tab { display: none; }
   .tab.active { display: block; }
 
-  .card {
-    background: var(--card); border-radius: var(--radius);
-    box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px;
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .page-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .page-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
   }
 
-  h2 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--green); }
-  h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
-
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 10px 16px; border-radius: 8px; border: none;
-    font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity .15s;
+  /* ── KPI STRIP ── */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
   }
-  .btn:active { opacity: 0.8; }
-  .btn-primary { background: var(--green); color: white; }
-  .btn-outline { background: transparent; border: 1.5px solid var(--green); color: var(--green); }
-  .btn-danger { background: transparent; border: 1.5px solid #ef4444; color: #ef4444; }
-  .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
-  .btn-icon { padding: 6px; border-radius: 6px; background: transparent; border: none; cursor: pointer; font-size: 1rem; color: var(--muted); }
-  .btn-icon:hover { background: var(--border); }
-  .btn-block { width: 100%; justify-content: center; }
-
-  input, select, textarea {
-    width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
-    border-radius: 8px; font-size: 0.9rem; background: var(--bg);
-    color: var(--text); outline: none; transition: border-color .15s;
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
   }
-  input:focus, select:focus, textarea:focus { border-color: var(--green); }
-  textarea { resize: vertical; min-height: 64px; }
-
-  .form-row { margin-bottom: 10px; }
-  .form-row label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--muted); }
-  .row { display: flex; gap: 8px; align-items: center; }
-
-  /* Week planner */
-  .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .week-label { font-size: 0.9rem; font-weight: 600; }
-  .day-card {
-    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 12px 14px; margin-bottom: 8px;
-    display: flex; align-items: center; gap: 10px;
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    margin-bottom: 4px;
   }
-  .day-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); width: 32px; flex-shrink: 0; }
-  .day-meal { flex: 1; }
-  .day-meal-name { font-size: 0.95rem; font-weight: 600; }
-  .day-meal-empty { font-size: 0.9rem; color: var(--muted); font-style: italic; }
-  .day-actions { display: flex; gap: 4px; }
-
-  /* Meals library */
-  .meal-card {
-    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-    padding: 14px; margin-bottom: 10px;
+  .kpi-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
   }
-  .meal-header { display: flex; align-items: center; justify-content: space-between; }
-  .meal-name { font-size: 0.95rem; font-weight: 700; }
-  .meal-actions { display: flex; gap: 4px; }
-  .meal-ingredients { margin-top: 8px; }
-  .ing-tag {
-    display: inline-block; background: var(--green-pale); color: var(--green);
-    border-radius: 100px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600;
+  .kpi-value.orange { color: var(--orange); }
+
+  /* ── DAY PILLS ── */
+  .day-pills {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    margin-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .day-pills::-webkit-scrollbar { display: none; }
+  .day-pill {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    text-align: center;
+    min-width: 56px;
+  }
+  .day-pill:hover { border-color: var(--orange); color: var(--orange); }
+  .day-pill.has-meal { color: var(--text); border-color: var(--border); }
+  .day-pill.active { background: var(--dark); border-color: var(--dark); color: #fff; }
+  .day-pill.active.has-meal { background: var(--orange); border-color: var(--orange); }
+  .day-pill-name { display: block; }
+  .day-pill-dot { display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--orange); margin: 3px auto 0; opacity: 0; }
+  .day-pill.has-meal .day-pill-dot { opacity: 1; }
+  .day-pill.active .day-pill-dot { background: rgba(255,255,255,.6); }
+
+  /* ── WEEK NAV ── */
+  .week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .week-nav-label { font-size: 12px; font-weight: 600; color: var(--text); }
+  .week-nav-sub { font-size: 10px; color: var(--muted); margin-top: 1px; font-family: 'DM Mono', monospace; }
+
+  /* ── DAY DETAIL ── */
+  .day-detail {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .day-detail-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .day-detail-name { font-size: 14px; font-weight: 700; }
+  .day-detail-empty { font-size: 13px; color: var(--muted); }
+  .day-detail-body { padding: 14px 16px; }
+  .day-detail-section {
+    margin-bottom: 14px;
+  }
+  .day-detail-section:last-child { margin-bottom: 0; }
+  .detail-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .method-steps {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-line;
+  }
+
+  /* ── TAGS ── */
+  .tag {
+    display: inline-block;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
     margin: 2px 3px 2px 0;
   }
-
-  /* Grocery list */
-  .grocery-category { margin-bottom: 16px; }
-  .grocery-category h3 { font-size: 0.85rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-  .grocery-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 0; border-bottom: 1px solid var(--border);
+  .tag-orange {
+    background: rgba(224,110,46,.08);
+    border-color: rgba(224,110,46,.25);
+    color: var(--orange);
+    font-weight: 600;
+    cursor: pointer;
   }
-  .grocery-item:last-child { border-bottom: none; }
-  .grocery-check { width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border); cursor: pointer; flex-shrink: 0; appearance: none; }
-  .grocery-check:checked { background: var(--green); border-color: var(--green); background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
-  .grocery-item-text { flex: 1; font-size: 0.95rem; }
-  .grocery-qty { font-size: 0.85rem; color: var(--muted); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: opacity .15s, background .15s;
+  }
+  .btn:active { opacity: .8; }
+  .btn-primary { background: var(--dark); color: #fff; }
+  .btn-primary:hover { background: #1e2130; }
+  .btn-orange { background: var(--orange); color: #fff; }
+  .btn-orange:hover { opacity: .9; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+  .btn-danger { background: transparent; border: 1px solid #fecaca; color: #dc2626; }
+  .btn-danger:hover { background: #fef2f2; }
+  .btn-sm { padding: 6px 10px; font-size: 11px; }
+  .btn-block { width: 100%; justify-content: center; }
+  .btn-ghost { background: transparent; border: none; color: var(--muted); padding: 4px 8px; font-size: 11px; font-weight: 600; }
+  .btn-ghost:hover { color: var(--text); }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .table-card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .table-card-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+  }
+  .table-row {
+    display: flex;
+    align-items: center;
+    padding: 11px 16px;
+    border-bottom: 1px solid #f0f2f5;
+    gap: 10px;
+    transition: background .1s;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: #fafafa; }
+  .table-row-name { flex: 1; font-size: 13px; font-weight: 600; }
+  .table-row-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .table-row-actions { display: flex; gap: 4px; align-items: center; }
+
+  /* ── GROCERY TABLE ── */
+  .grocery-check {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    flex-shrink: 0;
+    appearance: none;
+    transition: all .15s;
+  }
+  .grocery-check:checked {
+    background: var(--orange);
+    border-color: var(--orange);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
   label.crossed { text-decoration: line-through; color: var(--muted); }
 
-  /* Staples */
-  .staple-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 0; border-bottom: 1px solid var(--border);
+  /* ── STAPLE TOGGLE ── */
+  .staple-toggle {
+    width: 32px; height: 18px;
+    border-radius: 100px;
+    background: var(--border);
+    border: none;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: background .2s;
   }
-  .staple-item:last-child { border-bottom: none; }
-  .staple-low-toggle {
-    width: 36px; height: 20px; border-radius: 100px;
-    background: var(--border); border: none; cursor: pointer;
-    position: relative; flex-shrink: 0; transition: background .2s;
-  }
-  .staple-low-toggle::after {
-    content: ''; position: absolute; left: 2px; top: 2px;
-    width: 16px; height: 16px; border-radius: 50%; background: white;
+  .staple-toggle::after {
+    content: '';
+    position: absolute;
+    left: 2px; top: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: white;
     transition: transform .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
   }
-  .staple-low-toggle.low { background: var(--orange); }
-  .staple-low-toggle.low::after { transform: translateX(16px); }
-  .staple-name { flex: 1; font-size: 0.95rem; }
-  .staple-low-label { font-size: 0.75rem; color: var(--orange); font-weight: 700; }
+  .staple-toggle.low { background: var(--orange); }
+  .staple-toggle.low::after { transform: translateX(14px); }
 
-  /* Modal */
+  /* ── BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .badge-low { background: #fff8f0; color: var(--orange); border: 1px solid rgba(224,110,46,.3); }
+  .badge-planned { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+  /* ── FORMS ── */
+  input, select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(224,110,46,.1);
+  }
+  textarea { resize: vertical; min-height: 64px; }
+  .form-row { margin-bottom: 12px; }
+  .form-row label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  /* ── MODAL ── */
   .modal-backdrop {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.4); z-index: 200; align-items: flex-end; justify-content: center;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
   }
   .modal-backdrop.open { display: flex; }
   .modal {
-    background: var(--card); border-radius: 20px 20px 0 0;
-    padding: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+    background: var(--card);
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
   }
-  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .modal-title { font-size: 1.1rem; font-weight: 700; }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .modal-title { font-size: 14px; font-weight: 700; }
+  .modal-close {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:hover { color: var(--text); }
 
+  /* ── ING ROWS ── */
   .ing-list { list-style: none; }
   .ing-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
   .ing-row input { flex: 1; }
-  .ing-row .ing-qty { width: 80px; flex-shrink: 0; }
-  .ing-row .ing-cat { width: 110px; flex-shrink: 0; }
+  .ing-row .ing-qty { width: 76px; flex-shrink: 0; }
+  .ing-row .ing-cat { width: 108px; flex-shrink: 0; }
+  .ing-remove {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ing-remove:hover { border-color: #fecaca; color: #dc2626; background: #fef2f2; }
 
-  .tag-running-low { background: #fff3e0; color: var(--orange); border-radius: 100px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; }
+  /* ── SCALER ── */
+  .scaler-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: center;
+    margin: 18px 0 6px;
+  }
+  .scaler-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+  }
+  .scaler-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .scaler-count { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; min-width: 40px; text-align: center; }
 
-  .servings-badge { background: var(--green-pale); color: var(--green); border-radius: 100px; padding: 2px 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: none; }
-  .scaler-controls { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 16px 0; }
-  .scaler-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--green); background: transparent; color: var(--green); font-size: 1.2rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .scaler-count { font-size: 1.4rem; font-weight: 700; min-width: 40px; text-align: center; }
-
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
-  .empty-state .emoji { font-size: 2.5rem; margin-bottom: 8px; }
-
-  .week-offset-display { font-size: 0.75rem; color: var(--muted); }
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+  .empty-state p { margin-top: 8px; line-height: 1.5; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🥦 My Pantry</h1>
+  <div class="header-brand">
+    <div class="header-mark">MP</div>
+    <span class="header-title">My Pantry</span>
+  </div>
   <nav>
     <button class="active" onclick="showTab('week')">Week</button>
     <button onclick="showTab('meals')">Meals</button>
@@ -188,23 +503,43 @@
   <!-- WEEK TAB -->
   <div id="tab-week" class="tab active">
     <div class="week-nav">
-      <button class="btn btn-outline btn-sm" onclick="changeWeek(-1)">&#8592; Prev</button>
+      <button class="btn btn-outline btn-sm" onclick="changeWeek(-1)">&larr; Prev</button>
       <div style="text-align:center">
-        <div class="week-label" id="week-label"></div>
-        <div class="week-offset-display" id="week-offset-label"></div>
+        <div class="week-nav-label" id="week-label"></div>
+        <div class="week-nav-sub" id="week-offset-label"></div>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="changeWeek(1)">Next &#8594;</button>
+      <button class="btn btn-outline btn-sm" onclick="changeWeek(1)">Next &rarr;</button>
     </div>
-    <div id="week-days"></div>
+
+    <div class="kpi-strip">
+      <div class="kpi-card">
+        <div class="kpi-label">Planned</div>
+        <div class="kpi-value orange" id="kpi-planned">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Remaining</div>
+        <div class="kpi-value" id="kpi-remaining">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Meals</div>
+        <div class="kpi-value" id="kpi-total">7</div>
+      </div>
+    </div>
+
+    <div class="day-pills" id="day-pills"></div>
+    <div id="day-detail-panel"></div>
   </div>
 
   <!-- MEALS TAB -->
   <div id="tab-meals" class="tab">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <h2 style="margin:0">Meal Library</h2>
+    <div class="page-header">
+      <div>
+        <div class="page-title">Meal Library</div>
+        <div class="page-sub" id="meals-count"></div>
+      </div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-outline btn-sm" onclick="openImportModal()">🔗 Import</button>
-        <button class="btn btn-outline btn-sm" onclick="openSuggestModal()">✨ Suggest</button>
+        <button class="btn btn-outline btn-sm" onclick="openImportModal()">Import</button>
+        <button class="btn btn-outline btn-sm" onclick="openSuggestModal()">Suggest</button>
         <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add</button>
       </div>
     </div>
@@ -213,20 +548,25 @@
 
   <!-- GROCERY TAB -->
   <div id="tab-grocery" class="tab">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h2 style="margin:0">Grocery List</h2>
-      <button class="btn btn-outline btn-sm" onclick="loadGrocery()">&#8635; Refresh</button>
+    <div class="page-header">
+      <div>
+        <div class="page-title">Grocery List</div>
+        <div class="page-sub" id="grocery-week-label"></div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadGrocery()">Refresh</button>
     </div>
     <div id="grocery-list"></div>
   </div>
 
   <!-- STAPLES TAB -->
   <div id="tab-staples" class="tab">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <h2 style="margin:0">Staples</h2>
+    <div class="page-header">
+      <div>
+        <div class="page-title">Staples</div>
+        <div class="page-sub">Toggle when running low — shows up on grocery list</div>
+      </div>
       <button class="btn btn-primary btn-sm" onclick="openStapleModal()">+ Add</button>
     </div>
-    <p style="font-size:0.82rem; color:var(--muted); margin-bottom:14px;">Toggle the switch when you're running low — it'll appear on your grocery list.</p>
     <div id="staples-list"></div>
   </div>
 
@@ -237,34 +577,38 @@
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title" id="meal-modal-title">New Meal</span>
-      <button class="btn-icon" onclick="closeMealModal()">✕</button>
+      <button class="modal-close" onclick="closeMealModal()">✕</button>
     </div>
     <div class="form-row">
       <label>Meal name</label>
       <input id="meal-name" type="text" placeholder="e.g. Chicken Tacos">
     </div>
     <div class="form-row">
+      <label>Servings</label>
+      <input id="meal-servings" type="number" min="1" max="20" value="4" style="width:80px">
+    </div>
+    <div class="form-row">
       <label>Notes (optional)</label>
-      <textarea id="meal-notes" placeholder="Recipe link, tips, etc."></textarea>
+      <textarea id="meal-notes" placeholder="Tips, variations, etc."></textarea>
     </div>
     <div class="form-row">
       <label>Ingredients</label>
       <ul class="ing-list" id="ing-list"></ul>
       <button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="addIngredientRow()">+ Add ingredient</button>
     </div>
-    <div style="display:flex; gap:8px; margin-top:16px;">
+    <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn btn-primary" style="flex:1" onclick="saveMeal()">Save Meal</button>
       <button id="meal-delete-btn" class="btn btn-danger" style="display:none" onclick="deleteMeal()">Delete</button>
     </div>
   </div>
 </div>
 
-<!-- PICK MEAL MODAL (for week planner) -->
+<!-- PICK MEAL MODAL -->
 <div class="modal-backdrop" id="pick-modal">
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title" id="pick-modal-title">Choose Meal</span>
-      <button class="btn-icon" onclick="closePickModal()">✕</button>
+      <button class="modal-close" onclick="closePickModal()">✕</button>
     </div>
     <div id="pick-meal-list"></div>
     <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="clearDayMeal()">Clear this day</button>
@@ -276,15 +620,15 @@
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title" id="scaler-title">Scale Recipe</span>
-      <button class="btn-icon" onclick="closeScalerModal()">✕</button>
+      <button class="modal-close" onclick="closeScalerModal()">✕</button>
     </div>
-    <p style="font-size:0.85rem; color:var(--muted); text-align:center">Original recipe serves <strong id="scaler-original"></strong></p>
+    <p style="font-size:12px;color:var(--muted);text-align:center">Original serves <strong id="scaler-original"></strong></p>
     <div class="scaler-controls">
       <button class="scaler-btn" onclick="adjustServings(-1)">−</button>
       <span class="scaler-count" id="scaler-count"></span>
       <button class="scaler-btn" onclick="adjustServings(1)">+</button>
     </div>
-    <p style="font-size:0.82rem; color:var(--muted); text-align:center; margin-bottom:14px">servings</p>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px">servings</p>
     <div id="scaler-ingredients"></div>
   </div>
 </div>
@@ -293,8 +637,8 @@
 <div class="modal-backdrop" id="import-modal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">🔗 Import from URL</span>
-      <button class="btn-icon" onclick="closeImportModal()">✕</button>
+      <span class="modal-title">Import from URL</span>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
     </div>
     <div class="form-row">
       <label>Recipe URL</label>
@@ -309,12 +653,12 @@
 <div class="modal-backdrop" id="suggest-modal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">✨ Suggest Meals</span>
-      <button class="btn-icon" onclick="closeSuggestModal()">✕</button>
+      <span class="modal-title">Suggest Meals</span>
+      <button class="modal-close" onclick="closeSuggestModal()">✕</button>
     </div>
     <div class="form-row">
       <label>What are you in the mood for? (optional)</label>
-      <input id="suggest-prompt" type="text" placeholder="e.g. quick weeknights, something Italian, light meals…">
+      <input id="suggest-prompt" type="text" placeholder="e.g. quick weeknights, Italian, light meals…">
     </div>
     <button class="btn btn-primary btn-block" id="suggest-btn" onclick="fetchSuggestions()" style="margin-bottom:14px">Get Suggestions</button>
     <div id="suggest-results"></div>
@@ -325,8 +669,8 @@
 <div class="modal-backdrop" id="staple-modal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">New Staple</span>
-      <button class="btn-icon" onclick="closeStapleModal()">✕</button>
+      <span class="modal-title">Add Staple</span>
+      <button class="modal-close" onclick="closeStapleModal()">✕</button>
     </div>
     <div class="form-row">
       <label>Item name</label>
@@ -358,6 +702,8 @@ let currentWeekOffset = 0;
 let allMeals = [];
 let editingMealId = null;
 let pickingDay = null;
+let activeDow = null;
+let weekData = {};
 
 // ── Utilities ────────────────────────────────────────────
 function getWeekStart(offset = 0) {
@@ -398,7 +744,7 @@ function showTab(name) {
 }
 
 // ── Week planner ─────────────────────────────────────────
-function changeWeek(dir) { currentWeekOffset += dir; loadWeek(); }
+function changeWeek(dir) { currentWeekOffset += dir; activeDow = null; loadWeek(); }
 
 async function loadWeek() {
   const week = getWeekStart(currentWeekOffset);
@@ -407,29 +753,106 @@ async function loadWeek() {
     currentWeekOffset === 0 ? 'This week' : currentWeekOffset === 1 ? 'Next week' : currentWeekOffset === -1 ? 'Last week' : '';
 
   const data = await api('GET', `/week?week=${week}`);
-  const byDay = {};
-  (data.days || []).forEach(d => byDay[d.day_of_week] = d);
+  weekData = {};
+  (data.days || []).forEach(d => weekData[d.day_of_week] = d);
 
-  const container = document.getElementById('week-days');
+  const planned = Object.keys(weekData).filter(d => weekData[d].meal_name).length;
+  document.getElementById('kpi-planned').textContent = planned;
+  document.getElementById('kpi-remaining').textContent = 7 - planned;
+
+  // Default to today's day or first planned day
+  if (activeDow === null) {
+    const todayDow = new Date().getDay();
+    activeDow = todayDow === 0 ? 0 : todayDow; // keep as-is (Mon=1..Sun=0)
+  }
+
+  renderDayPills();
+  renderDayDetail();
+}
+
+function renderDayPills() {
+  const container = document.getElementById('day-pills');
   container.innerHTML = '';
   for (let i = 1; i <= 7; i++) {
-    const dow = i % 7; // Mon=1..Sun=0
-    const entry = byDay[dow];
-    const div = document.createElement('div');
-    div.className = 'day-card';
-    div.innerHTML = `
-      <div class="day-label">${DAYS[i-1]}</div>
-      <div class="day-meal">
-        ${entry && entry.meal_name
-          ? `<div class="day-meal-name">${entry.meal_name}</div>`
-          : `<div class="day-meal-empty">No meal planned</div>`}
-      </div>
-      <div class="day-actions">
-        <button class="btn-icon" title="Pick meal" onclick="openPickModal(${dow}, '${DAYS[i-1]}')">✏️</button>
-      </div>
-    `;
-    container.appendChild(div);
+    const dow = i % 7;
+    const entry = weekData[dow];
+    const hasMeal = entry && entry.meal_name;
+    const isActive = dow === activeDow;
+    const pill = document.createElement('button');
+    pill.className = `day-pill${hasMeal ? ' has-meal' : ''}${isActive ? ' active' : ''}`;
+    pill.innerHTML = `<span class="day-pill-name">${DAYS[i-1]}</span><span class="day-pill-dot"></span>`;
+    pill.onclick = () => { activeDow = dow; renderDayPills(); renderDayDetail(); };
+    container.appendChild(pill);
   }
+}
+
+function renderDayDetail() {
+  const panel = document.getElementById('day-detail-panel');
+  const entry = weekData[activeDow];
+  const dayName = DAYS[activeDow === 0 ? 6 : activeDow - 1];
+
+  if (!entry || !entry.meal_name) {
+    panel.innerHTML = `
+      <div class="day-detail">
+        <div class="day-detail-header">
+          <span class="day-detail-empty">${dayName} — No meal planned</span>
+          <button class="btn btn-orange btn-sm" onclick="openPickModal(${activeDow}, '${dayName}')">+ Plan Meal</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const ings = (entry.ingredients || []).map(i =>
+    `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
+  ).join('');
+
+  panel.innerHTML = `
+    <div class="day-detail">
+      <div class="day-detail-header">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">${dayName}</div>
+          <div class="day-detail-name">${entry.meal_name}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="openPickModal(${activeDow}, '${dayName}')">Change</button>
+        </div>
+      </div>
+      ${ings || entry.meal_notes || entry.ingredients?.length ? `
+      <div class="day-detail-body">
+        ${ings ? `<div class="day-detail-section">
+          <div class="detail-section-label">Ingredients</div>
+          <div>${ings}</div>
+        </div>` : ''}
+        ${entry.meal_notes ? `<div class="day-detail-section">
+          <div class="detail-section-label">Notes</div>
+          <div style="font-size:13px;color:var(--muted)">${entry.meal_notes}</div>
+        </div>` : ''}
+        ${entry.ingredients && entry.ingredients.length ? `
+        <div class="day-detail-section">
+          <button class="btn btn-ghost" style="padding:0;font-size:11px" onclick="toggleDayMethod(this)">Show method &darr;</button>
+          <div class="day-method" style="display:none;margin-top:10px">
+            <div class="detail-section-label">Method</div>
+            <div class="method-steps" id="method-${activeDow}"></div>
+          </div>
+        </div>` : ''}
+      </div>` : ''}
+    </div>`;
+
+  // Load method from meal library
+  if (entry.meal_id) {
+    const meal = allMeals.find(m => m.id === entry.meal_id);
+    if (meal && meal.method) {
+      const el = document.getElementById(`method-${activeDow}`);
+      if (el) el.textContent = meal.method;
+    }
+  }
+}
+
+function toggleDayMethod(btn) {
+  const methodDiv = btn.nextElementSibling;
+  const shown = methodDiv.style.display !== 'none';
+  methodDiv.style.display = shown ? 'none' : 'block';
+  btn.innerHTML = shown ? 'Show method &darr;' : 'Hide method &uarr;';
 }
 
 function openPickModal(dow, dayName) {
@@ -438,15 +861,15 @@ function openPickModal(dow, dayName) {
   const list = document.getElementById('pick-meal-list');
   list.innerHTML = '';
   if (!allMeals.length) {
-    list.innerHTML = '<p style="color:var(--muted); text-align:center; padding:20px">No meals in library yet.<br>Add some in the Meals tab!</p>';
+    list.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">No meals in library yet.<br>Add some in the Meals tab.</p>';
   } else {
     allMeals.forEach(m => {
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-outline btn-block';
-      btn.style.marginBottom = '8px';
-      btn.textContent = m.name;
-      btn.onclick = () => assignMeal(m.id);
-      list.appendChild(btn);
+      const row = document.createElement('div');
+      row.className = 'table-row';
+      row.style.cursor = 'pointer';
+      row.innerHTML = `<span class="table-row-name">${m.name}</span><span class="table-row-sub">${m.servings || 4} servings</span>`;
+      row.onclick = () => assignMeal(m.id);
+      list.appendChild(row);
     });
   }
   document.getElementById('pick-modal').classList.add('open');
@@ -472,36 +895,48 @@ async function clearDayMeal() {
 async function loadMeals() {
   allMeals = await api('GET', '/meals');
   const container = document.getElementById('meals-list');
+  const countEl = document.getElementById('meals-count');
+  if (countEl) countEl.textContent = `${allMeals.length} recipe${allMeals.length !== 1 ? 's' : ''} saved`;
+
   if (!allMeals.length) {
-    container.innerHTML = `<div class="empty-state"><div class="emoji">🍳</div><p>No meals yet.<br>Add your first one!</p></div>`;
+    container.innerHTML = `<div class="empty-state"><p>No meals yet.<br>Add your first one or use Suggest.</p></div>`;
     return;
   }
   container.innerHTML = '';
   allMeals.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'meal-card';
+    const wrap = document.createElement('div');
+    wrap.className = 'table-card';
+    wrap.style.marginBottom = '10px';
+
     const ings = (m.ingredients || []).map(i =>
-      `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
+      `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
     ).join('');
-    const methodId = `method-${m.id}`;
-    div.innerHTML = `
-      <div class="meal-header">
-        <span class="meal-name">${m.name}</span>
-        <div class="meal-actions">
-          <button class="servings-badge" onclick="openScalerModal(${m.id})" title="Scale recipe">
-            ${m.servings || 4} servings
-          </button>
-          ${m.source_url ? `<a href="${m.source_url}" target="_blank" class="btn-icon" title="View original">🔗</a>` : ''}
-          ${m.method ? `<button class="btn-icon" onclick="toggleMethod('${methodId}')" title="View steps">📋</button>` : ''}
-          <button class="btn-icon" onclick="openMealModal(${m.id})">✏️</button>
+
+    const methodId = `meal-method-${m.id}`;
+    wrap.innerHTML = `
+      <div class="table-card-header">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+          <span style="font-size:13px;font-weight:700">${m.name}</span>
+          <span class="tag tag-orange" onclick="openScalerModal(${m.id})">${m.servings || 4} servings</span>
+          ${m.source_url ? `<a href="${m.source_url}" target="_blank" class="btn-ghost" style="font-size:11px;text-decoration:none">Source</a>` : ''}
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          ${m.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleMealMethod('${methodId}', this)">Steps</button>` : ''}
+          <button class="btn btn-outline btn-sm" onclick="openMealModal(${m.id})">Edit</button>
         </div>
       </div>
-      ${m.notes ? `<div style="font-size:0.82rem; color:var(--muted); margin-top:4px">${m.notes}</div>` : ''}
-      ${ings ? `<div class="meal-ingredients" style="margin-top:8px">${ings}</div>` : ''}
-      ${m.method ? `<div id="${methodId}" style="display:none; margin-top:10px; font-size:0.85rem; line-height:1.6; color:var(--text); white-space:pre-line; border-top:1px solid var(--border); padding-top:10px">${m.method}</div>` : ''}
+      ${ings ? `<div style="padding:10px 16px;border-bottom:1px solid #f0f2f5">${ings}</div>` : ''}
+      ${m.method ? `<div id="${methodId}" style="display:none;padding:14px 16px;font-size:13px;line-height:1.7;white-space:pre-line;color:var(--text)">${m.method}</div>` : ''}
     `;
-    container.appendChild(div);
+    container.appendChild(wrap);
   });
+}
+
+function toggleMealMethod(id, btn) {
+  const el = document.getElementById(id);
+  const shown = el.style.display !== 'none';
+  el.style.display = shown ? 'none' : 'block';
+  btn.textContent = shown ? 'Steps' : 'Hide';
 }
 
 function openMealModal(id) {
@@ -513,10 +948,12 @@ function openMealModal(id) {
   if (id) {
     const meal = allMeals.find(m => m.id === id);
     document.getElementById('meal-name').value = meal.name;
+    document.getElementById('meal-servings').value = meal.servings || 4;
     document.getElementById('meal-notes').value = meal.notes || '';
     (meal.ingredients || []).forEach(i => addIngredientRow(i));
   } else {
     document.getElementById('meal-name').value = '';
+    document.getElementById('meal-servings').value = 4;
     document.getElementById('meal-notes').value = '';
     addIngredientRow();
   }
@@ -534,7 +971,7 @@ function addIngredientRow(ing) {
     <select class="ing-cat">
       ${CATEGORIES.map(c => `<option ${ing && ing.category === c ? 'selected' : ''}>${c}</option>`).join('')}
     </select>
-    <button class="btn-icon" onclick="this.closest('li').remove()">🗑</button>
+    <button class="ing-remove" onclick="this.closest('li').remove()">✕</button>
   `;
   document.getElementById('ing-list').appendChild(li);
 }
@@ -543,6 +980,7 @@ async function saveMeal() {
   const name = document.getElementById('meal-name').value.trim();
   if (!name) return alert('Please enter a meal name.');
   const notes = document.getElementById('meal-notes').value.trim();
+  const servings = parseInt(document.getElementById('meal-servings').value) || 4;
   const ingredients = [...document.querySelectorAll('#ing-list .ing-row')]
     .map(row => ({
       name: row.querySelector('.ing-name').value.trim(),
@@ -552,9 +990,9 @@ async function saveMeal() {
     .filter(i => i.name);
 
   if (editingMealId) {
-    await api('PUT', `/meals/${editingMealId}`, { name, notes, ingredients });
+    await api('PUT', `/meals/${editingMealId}`, { name, notes, servings, ingredients });
   } else {
-    await api('POST', '/meals', { name, notes, ingredients });
+    await api('POST', '/meals', { name, notes, servings, ingredients });
   }
   closeMealModal();
   loadMeals();
@@ -572,11 +1010,14 @@ async function loadGrocery() {
   const week = getWeekStart(currentWeekOffset);
   const data = await api('GET', `/grocery?week=${week}`);
   const container = document.getElementById('grocery-list');
+  const labelEl = document.getElementById('grocery-week-label');
+  if (labelEl) labelEl.textContent = formatWeekLabel(week);
+
   const cats = data.categories || {};
   const keys = Object.keys(cats);
 
   if (!keys.length) {
-    container.innerHTML = `<div class="empty-state"><div class="emoji">🛒</div><p>Nothing on the list yet.<br>Plan your week or mark staples as low.</p></div>`;
+    container.innerHTML = `<div class="empty-state"><p>Nothing on the list yet.<br>Plan your week or mark staples as low.</p></div>`;
     return;
   }
 
@@ -584,17 +1025,22 @@ async function loadGrocery() {
   const orderedKeys = [...CATEGORIES.filter(c => cats[c]), ...keys.filter(k => !CATEGORIES.includes(k))];
   orderedKeys.forEach(cat => {
     const items = cats[cat];
-    const div = document.createElement('div');
-    div.className = 'grocery-category card';
-    div.innerHTML = `<h3>${cat}</h3>` + items.map((item, idx) => {
-      const uid = `g-${cat}-${idx}`;
-      return `
-        <div class="grocery-item">
+    const wrap = document.createElement('div');
+    wrap.className = 'table-card';
+    wrap.innerHTML = `
+      <div class="table-card-header">
+        <span class="table-card-title">${cat}</span>
+        <span class="table-card-title" style="font-family:'DM Mono',monospace;letter-spacing:0">${items.length}</span>
+      </div>
+      ${items.map((item, idx) => {
+        const uid = `g-${cat}-${idx}`.replace(/[^a-z0-9-]/gi, '-');
+        return `<div class="table-row">
           <input type="checkbox" class="grocery-check" id="${uid}" onchange="toggleGroceryItem(this)">
-          <label for="${uid}" class="grocery-item-text">${item.name}${item.quantity ? `<span class="grocery-qty"> — ${item.quantity}</span>` : ''}</label>
+          <label for="${uid}" style="flex:1;font-size:13px;font-weight:500;cursor:pointer">${item.name}</label>
+          ${item.quantity ? `<span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">${item.quantity}</span>` : ''}
         </div>`;
-    }).join('');
-    container.appendChild(div);
+      }).join('')}`;
+    container.appendChild(wrap);
   });
 }
 
@@ -609,11 +1055,10 @@ async function loadStaples() {
   const staples = await api('GET', '/staples');
   const container = document.getElementById('staples-list');
   if (!staples.length) {
-    container.innerHTML = `<div class="empty-state"><div class="emoji">🧂</div><p>No staples tracked yet.<br>Add things like olive oil, salt, pasta.</p></div>`;
+    container.innerHTML = `<div class="empty-state"><p>No staples tracked yet.<br>Add things like olive oil, salt, pasta.</p></div>`;
     return;
   }
 
-  // Group by category
   const grouped = {};
   staples.forEach(s => {
     if (!grouped[s.category]) grouped[s.category] = [];
@@ -622,18 +1067,22 @@ async function loadStaples() {
 
   container.innerHTML = '';
   Object.entries(grouped).forEach(([cat, items]) => {
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.innerHTML = `<h3 style="font-size:0.82rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px">${cat}</h3>` +
-      items.map(s => `
-        <div class="staple-item">
-          <button class="staple-low-toggle ${s.is_low ? 'low' : ''}" id="toggle-${s.id}" onclick="toggleStaple(${s.id}, this)"></button>
-          <span class="staple-name">${s.name}</span>
-          ${s.is_low ? '<span class="staple-low-label">LOW</span>' : ''}
-          <button class="btn-icon" onclick="deleteStaple(${s.id})">🗑</button>
-        </div>
-      `).join('');
-    container.appendChild(div);
+    const wrap = document.createElement('div');
+    wrap.className = 'table-card';
+    wrap.style.marginBottom = '10px';
+    wrap.innerHTML = `
+      <div class="table-card-header">
+        <span class="table-card-title">${cat}</span>
+        <span class="table-card-title" style="font-family:'DM Mono',monospace;letter-spacing:0">${items.filter(s=>s.is_low).length} low</span>
+      </div>
+      ${items.map(s => `
+        <div class="table-row">
+          <button class="staple-toggle ${s.is_low ? 'low' : ''}" onclick="toggleStaple(${s.id}, this)"></button>
+          <span style="flex:1;font-size:13px;font-weight:500">${s.name}</span>
+          ${s.is_low ? `<span class="badge badge-low">LOW</span>` : ''}
+          <button class="btn btn-ghost btn-sm" style="color:var(--muted)" onclick="deleteStaple(${s.id})">Remove</button>
+        </div>`).join('')}`;
+    container.appendChild(wrap);
   });
 }
 
@@ -648,7 +1097,10 @@ async function deleteStaple(id) {
   loadStaples();
 }
 
-function openStapleModal() { document.getElementById('staple-modal').classList.add('open'); document.getElementById('staple-name').value = ''; }
+function openStapleModal() {
+  document.getElementById('staple-name').value = '';
+  document.getElementById('staple-modal').classList.add('open');
+}
 function closeStapleModal() { document.getElementById('staple-modal').classList.remove('open'); }
 
 async function saveStaple() {
@@ -683,7 +1135,6 @@ function adjustServings(delta) {
 
 function scaleQty(qty, from, to) {
   if (!qty) return qty;
-  // Match leading number (including fractions like 1/2 or 1.5)
   const match = qty.match(/^(\d+\/\d+|\d*\.?\d+)/);
   if (!match) return qty;
   let num;
@@ -693,10 +1144,7 @@ function scaleQty(qty, from, to) {
   } else {
     num = parseFloat(match[1]);
   }
-  const scaled = (num * to / from);
-  // Format nicely: use fractions for common values, else 1 decimal
-  const formatted = formatNum(scaled);
-  return qty.replace(match[1], formatted);
+  return qty.replace(match[1], formatNum(num * to / from));
 }
 
 function formatNum(n) {
@@ -714,13 +1162,12 @@ function renderScaler() {
   document.getElementById('scaler-count').textContent = _scalerCurrent;
   const from = _scalerMeal.servings || 4;
   const to = _scalerCurrent;
-  const ings = (_scalerMeal.ingredients || []);
   document.getElementById('scaler-ingredients').innerHTML = `
-    <div class="card">
-      ${ings.map(i => `
-        <div class="grocery-item">
-          <span class="grocery-item-text">${i.name}</span>
-          <span class="grocery-qty">${scaleQty(i.quantity, from, to) || ''}</span>
+    <div class="table-card">
+      ${(_scalerMeal.ingredients || []).map(i => `
+        <div class="table-row">
+          <span style="flex:1;font-size:13px;font-weight:500">${i.name}</span>
+          <span style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${scaleQty(i.quantity, from, to) || ''}</span>
         </div>`).join('')}
     </div>`;
 }
@@ -741,33 +1188,32 @@ async function fetchImport() {
   const btn = document.getElementById('import-btn');
   const result = document.getElementById('import-result');
   btn.disabled = true;
-  btn.textContent = 'Fetching recipe…';
+  btn.textContent = 'Fetching…';
   result.innerHTML = '<p style="color:var(--muted);text-align:center;padding:16px">Reading the page…</p>';
 
   try {
-    // Fetch from browser to avoid server-side blocking
     let html = '';
     try {
       const pageRes = await fetch(url);
       html = await pageRes.text();
     } catch (e) {
-      result.innerHTML = '<p style="color:#ef4444">Could not load that page. Make sure the URL is correct.</p>';
+      result.innerHTML = '<p style="color:#dc2626">Could not load that page. Make sure the URL is correct.</p>';
       btn.disabled = false; btn.textContent = 'Try Again'; return;
     }
     const data = await api('POST', '/import', { html });
-    if (data.error) { result.innerHTML = `<p style="color:#ef4444">${data.error}</p>`; btn.disabled = false; btn.textContent = 'Try Again'; return; }
+    if (data.error) { result.innerHTML = `<p style="color:#dc2626">${data.error}</p>`; btn.disabled = false; btn.textContent = 'Try Again'; return; }
     const r = data.recipe;
-    const ings = (r.ingredients || []).map(i => `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
+    const ings = (r.ingredients || []).map(i => `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
     result.innerHTML = `
-      <div class="card">
-        <div style="font-weight:700;font-size:1rem;margin-bottom:8px">${r.name}</div>
-        <div style="margin-bottom:10px">${ings}</div>
-        ${r.method ? `<div style="font-size:0.82rem;color:var(--muted);line-height:1.6;white-space:pre-line;border-top:1px solid var(--border);padding-top:8px">${r.method}</div>` : ''}
-        <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="saveImportedRecipe()">+ Add to Library</button>
+      <div class="table-card">
+        <div class="table-card-header"><span style="font-size:13px;font-weight:700">${r.name}</span></div>
+        <div style="padding:12px 16px;border-bottom:1px solid #f0f2f5">${ings}</div>
+        ${r.method ? `<div style="padding:12px 16px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line;border-bottom:1px solid #f0f2f5">${r.method}</div>` : ''}
+        <div style="padding:12px 16px"><button class="btn btn-primary btn-block" onclick="saveImportedRecipe()">Add to Library</button></div>
       </div>`;
     window._importedRecipe = { ...r, source_url: url };
   } catch (e) {
-    result.innerHTML = '<p style="color:#ef4444">Something went wrong. Try another URL.</p>';
+    result.innerHTML = '<p style="color:#dc2626">Something went wrong. Try another URL.</p>';
   }
   btn.disabled = false;
   btn.textContent = 'Import Another';
@@ -779,11 +1225,6 @@ async function saveImportedRecipe() {
   allMeals = await api('GET', '/meals');
   closeImportModal();
   loadMeals();
-}
-
-function toggleMethod(id) {
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 // ── AI Suggestions ───────────────────────────────────────
@@ -813,40 +1254,33 @@ async function fetchSuggestions() {
     }
     results.innerHTML = '';
     data.meals.forEach((meal, idx) => {
-      const div = document.createElement('div');
-      div.className = 'card';
-      div.style.marginBottom = '10px';
-      const ings = (meal.ingredients || []).map(i =>
-        `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
-      ).join('');
-      div.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <strong style="font-size:0.95rem">${meal.name}</strong>
-          <button class="btn btn-primary btn-sm" onclick="addSuggestedMeal(${idx})">+ Add</button>
+      const wrap = document.createElement('div');
+      wrap.className = 'table-card';
+      wrap.style.marginBottom = '10px';
+      const ings = (meal.ingredients || []).map(i => `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
+      wrap.innerHTML = `
+        <div class="table-card-header">
+          <span style="font-size:13px;font-weight:700">${meal.name}</span>
+          <button class="btn btn-primary btn-sm" onclick="addSuggestedMeal(${idx}, this)">+ Add</button>
         </div>
-        <div>${ings}</div>
-      `;
-      div.dataset.meal = JSON.stringify(meal);
-      results.appendChild(div);
+        <div style="padding:10px 16px">${ings}</div>`;
+      results.appendChild(wrap);
     });
     window._suggestedMeals = data.meals;
   } catch (e) {
-    results.innerHTML = '<p style="color:#ef4444">Something went wrong. Try again.</p>';
+    results.innerHTML = '<p style="color:#dc2626">Something went wrong. Try again.</p>';
   }
   btn.disabled = false;
   btn.textContent = 'Get More';
 }
 
-async function addSuggestedMeal(idx) {
+async function addSuggestedMeal(idx, btn) {
   const meal = window._suggestedMeals[idx];
   await api('POST', '/meals', { name: meal.name, notes: null, ingredients: meal.ingredients });
   allMeals = await api('GET', '/meals');
-  // Mark button as added
-  const cards = document.querySelectorAll('#suggest-results .card');
-  const btn = cards[idx].querySelector('button');
-  btn.textContent = '✓ Added';
+  btn.textContent = 'Added';
   btn.disabled = true;
-  btn.style.background = 'var(--green-light)';
+  btn.className = 'btn btn-outline btn-sm';
 }
 
 // Close modals on backdrop click
