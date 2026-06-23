@@ -542,6 +542,7 @@
         <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add</button>
       </div>
     </div>
+    <div class="day-pills" id="meal-category-pills" style="margin-bottom:14px"></div>
     <div id="meals-list"></div>
   </div>
 
@@ -582,9 +583,21 @@
       <label>Meal name</label>
       <input id="meal-name" type="text" placeholder="e.g. Chicken Tacos">
     </div>
-    <div class="form-row">
-      <label>Servings</label>
-      <input id="meal-servings" type="number" min="1" max="20" value="4" style="width:80px">
+    <div style="display:flex;gap:10px">
+      <div class="form-row" style="flex:1">
+        <label>Category</label>
+        <select id="meal-category">
+          <option>Breakfast</option>
+          <option selected>Dinner</option>
+          <option>Lunch</option>
+          <option>Snack</option>
+          <option>Dessert</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Servings</label>
+        <input id="meal-servings" type="number" min="1" max="20" value="4" style="width:70px">
+      </div>
     </div>
     <div class="form-row">
       <label>Notes (optional)</label>
@@ -891,18 +904,42 @@ async function clearDayMeal() {
 }
 
 // ── Meal library ─────────────────────────────────────────
+const MEAL_CATS = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+let activeMealCat = 'All';
+
 async function loadMeals() {
   allMeals = await api('GET', '/meals');
+  renderMealCategoryPills();
+  renderMeals();
+}
+
+function renderMealCategoryPills() {
+  const pills = document.getElementById('meal-category-pills');
+  if (!pills) return;
+  pills.innerHTML = '';
+  MEAL_CATS.forEach(cat => {
+    const btn = document.createElement('button');
+    const count = cat === 'All' ? allMeals.length : allMeals.filter(m => (m.meal_category || 'Dinner') === cat).length;
+    btn.className = `day-pill${activeMealCat === cat ? ' active has-meal' : count > 0 ? ' has-meal' : ''}`;
+    btn.style.minWidth = '68px';
+    btn.innerHTML = `<span class="day-pill-name">${cat}</span><span class="day-pill-dot"></span>`;
+    btn.onclick = () => { activeMealCat = cat; renderMealCategoryPills(); renderMeals(); };
+    pills.appendChild(btn);
+  });
+}
+
+function renderMeals() {
   const container = document.getElementById('meals-list');
   const countEl = document.getElementById('meals-count');
+  const filtered = activeMealCat === 'All' ? allMeals : allMeals.filter(m => (m.meal_category || 'Dinner') === activeMealCat);
   if (countEl) countEl.textContent = `${allMeals.length} recipe${allMeals.length !== 1 ? 's' : ''} saved`;
 
-  if (!allMeals.length) {
-    container.innerHTML = `<div class="empty-state"><p>No meals yet.<br>Add your first one or use Suggest.</p></div>`;
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><p>No ${activeMealCat.toLowerCase()} recipes yet.<br>Add one or use Suggest.</p></div>`;
     return;
   }
   container.innerHTML = '';
-  allMeals.forEach(m => {
+  filtered.forEach(m => {
     const wrap = document.createElement('div');
     wrap.className = 'table-card';
     wrap.style.marginBottom = '10px';
@@ -947,11 +984,13 @@ function openMealModal(id) {
   if (id) {
     const meal = allMeals.find(m => m.id === id);
     document.getElementById('meal-name').value = meal.name;
+    document.getElementById('meal-category').value = meal.meal_category || 'Dinner';
     document.getElementById('meal-servings').value = meal.servings || 4;
     document.getElementById('meal-notes').value = meal.notes || '';
     (meal.ingredients || []).forEach(i => addIngredientRow(i));
   } else {
     document.getElementById('meal-name').value = '';
+    document.getElementById('meal-category').value = activeMealCat !== 'All' ? activeMealCat : 'Dinner';
     document.getElementById('meal-servings').value = 4;
     document.getElementById('meal-notes').value = '';
     addIngredientRow();
@@ -979,6 +1018,7 @@ async function saveMeal() {
   const name = document.getElementById('meal-name').value.trim();
   if (!name) return alert('Please enter a meal name.');
   const notes = document.getElementById('meal-notes').value.trim();
+  const meal_category = document.getElementById('meal-category').value;
   const servings = parseInt(document.getElementById('meal-servings').value) || 4;
   const ingredients = [...document.querySelectorAll('#ing-list .ing-row')]
     .map(row => ({
@@ -989,9 +1029,9 @@ async function saveMeal() {
     .filter(i => i.name);
 
   if (editingMealId) {
-    await api('PUT', `/meals/${editingMealId}`, { name, notes, servings, ingredients });
+    await api('PUT', `/meals/${editingMealId}`, { name, notes, meal_category, servings, ingredients });
   } else {
-    await api('POST', '/meals', { name, notes, servings, ingredients });
+    await api('POST', '/meals', { name, notes, meal_category, servings, ingredients });
   }
   closeMealModal();
   loadMeals();

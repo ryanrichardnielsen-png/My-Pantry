@@ -14,13 +14,13 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { name, notes, method, source_url, servings, ingredients } = req.body;
+  const { name, notes, method, source_url, servings, meal_category, ingredients } = req.body;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const { rows: [meal] } = await client.query(
-      'INSERT INTO meals (name, notes, method, source_url, servings) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, notes || null, method || null, source_url || null, servings || 4]
+      'INSERT INTO meals (name, notes, method, source_url, servings, meal_category) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name, notes || null, method || null, source_url || null, servings || 4, meal_category || 'Dinner']
     );
     if (ingredients && ingredients.length) {
       for (const ing of ingredients) {
@@ -54,13 +54,13 @@ router.get('/:id', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  const { name, notes, method, source_url, servings, ingredients } = req.body;
+  const { name, notes, method, source_url, servings, meal_category, ingredients } = req.body;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const { rows: [meal] } = await client.query(
-      'UPDATE meals SET name=$1, notes=$2, method=$3, source_url=$4, servings=$5 WHERE id=$6 RETURNING *',
-      [name, notes || null, method || null, source_url || null, servings || 4, req.params.id]
+      'UPDATE meals SET name=$1, notes=$2, method=$3, source_url=$4, servings=$5, meal_category=$6 WHERE id=$7 RETURNING *',
+      [name, notes || null, method || null, source_url || null, servings || 4, meal_category || 'Dinner', req.params.id]
     );
     if (!meal) return res.status(404).json({ error: 'Not found' });
     await client.query('DELETE FROM ingredients WHERE meal_id=$1', [meal.id]);
