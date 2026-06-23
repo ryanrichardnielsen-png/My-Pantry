@@ -11,8 +11,13 @@ async function init() {
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       notes TEXT,
+      method TEXT,
+      source_url TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    ALTER TABLE meals ADD COLUMN IF NOT EXISTS method TEXT;
+    ALTER TABLE meals ADD COLUMN IF NOT EXISTS source_url TEXT;
 
     CREATE TABLE IF NOT EXISTS ingredients (
       id SERIAL PRIMARY KEY,

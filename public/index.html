@@ -198,6 +198,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
       <h2 style="margin:0">Meal Library</h2>
       <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="openImportModal()">🔗 Import</button>
         <button class="btn btn-outline btn-sm" onclick="openSuggestModal()">✨ Suggest</button>
         <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add</button>
       </div>
@@ -262,6 +263,22 @@
     </div>
     <div id="pick-meal-list"></div>
     <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="clearDayMeal()">Clear this day</button>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-backdrop" id="import-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🔗 Import from URL</span>
+      <button class="btn-icon" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <label>Recipe URL</label>
+      <input id="import-url" type="url" placeholder="https://www.allrecipes.com/recipe/...">
+    </div>
+    <button class="btn btn-primary btn-block" id="import-btn" onclick="fetchImport()" style="margin-bottom:14px">Import Recipe</button>
+    <div id="import-result"></div>
   </div>
 </div>
 
@@ -443,15 +460,19 @@ async function loadMeals() {
     const ings = (m.ingredients || []).map(i =>
       `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
     ).join('');
+    const methodId = `method-${m.id}`;
     div.innerHTML = `
       <div class="meal-header">
         <span class="meal-name">${m.name}</span>
         <div class="meal-actions">
+          ${m.source_url ? `<a href="${m.source_url}" target="_blank" class="btn-icon" title="View original">🔗</a>` : ''}
+          ${m.method ? `<button class="btn-icon" onclick="toggleMethod('${methodId}')" title="View steps">📋</button>` : ''}
           <button class="btn-icon" onclick="openMealModal(${m.id})">✏️</button>
         </div>
       </div>
       ${m.notes ? `<div style="font-size:0.82rem; color:var(--muted); margin-top:4px">${m.notes}</div>` : ''}
       ${ings ? `<div class="meal-ingredients" style="margin-top:8px">${ings}</div>` : ''}
+      ${m.method ? `<div id="${methodId}" style="display:none; margin-top:10px; font-size:0.85rem; line-height:1.6; color:var(--text); white-space:pre-line; border-top:1px solid var(--border); padding-top:10px">${m.method}</div>` : ''}
     `;
     container.appendChild(div);
   });
@@ -611,6 +632,58 @@ async function saveStaple() {
   await api('POST', '/staples', { name, category });
   closeStapleModal();
   loadStaples();
+}
+
+// ── URL Import ───────────────────────────────────────────
+function openImportModal() {
+  document.getElementById('import-url').value = '';
+  document.getElementById('import-result').innerHTML = '';
+  document.getElementById('import-btn').disabled = false;
+  document.getElementById('import-btn').textContent = 'Import Recipe';
+  document.getElementById('import-modal').classList.add('open');
+}
+function closeImportModal() { document.getElementById('import-modal').classList.remove('open'); }
+
+async function fetchImport() {
+  const url = document.getElementById('import-url').value.trim();
+  if (!url) return alert('Please paste a recipe URL.');
+  const btn = document.getElementById('import-btn');
+  const result = document.getElementById('import-result');
+  btn.disabled = true;
+  btn.textContent = 'Fetching recipe…';
+  result.innerHTML = '<p style="color:var(--muted);text-align:center;padding:16px">Reading the page…</p>';
+
+  try {
+    const data = await api('POST', '/import', { url });
+    if (data.error) { result.innerHTML = `<p style="color:#ef4444">${data.error}</p>`; btn.disabled = false; btn.textContent = 'Try Again'; return; }
+    const r = data.recipe;
+    const ings = (r.ingredients || []).map(i => `<span class="ing-tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
+    result.innerHTML = `
+      <div class="card">
+        <div style="font-weight:700;font-size:1rem;margin-bottom:8px">${r.name}</div>
+        <div style="margin-bottom:10px">${ings}</div>
+        ${r.method ? `<div style="font-size:0.82rem;color:var(--muted);line-height:1.6;white-space:pre-line;border-top:1px solid var(--border);padding-top:8px">${r.method}</div>` : ''}
+        <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="saveImportedRecipe()">+ Add to Library</button>
+      </div>`;
+    window._importedRecipe = { ...r, source_url: url };
+  } catch (e) {
+    result.innerHTML = '<p style="color:#ef4444">Something went wrong. Try another URL.</p>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Import Another';
+}
+
+async function saveImportedRecipe() {
+  const r = window._importedRecipe;
+  await api('POST', '/meals', { name: r.name, notes: null, method: r.method, source_url: r.source_url, ingredients: r.ingredients });
+  allMeals = await api('GET', '/meals');
+  closeImportModal();
+  loadMeals();
+}
+
+function toggleMethod(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 // ── AI Suggestions ───────────────────────────────────────

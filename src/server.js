@@ -14,6 +14,7 @@ app.use('/api/week', require('./routes/week'));
 app.use('/api/grocery', require('./routes/grocery'));
 app.use('/api/staples', require('./routes/staples'));
 app.use('/api/suggest', require('./routes/suggest'));
+app.use('/api/import', require('./routes/import'));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
