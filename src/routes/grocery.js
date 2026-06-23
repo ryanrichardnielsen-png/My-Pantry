@@ -27,12 +27,34 @@ router.get('/', async (req, res) => {
     `SELECT name, category FROM staples WHERE is_low = TRUE ORDER BY category, name`
   );
 
-  // Group by category
+  // Cooking measurements that don't translate to a purchase unit
+  const cookingMeasures = /^(tbsp|tsp|cup|cups|tablespoon|teaspoon|pinch|dash|to taste|handful|splash|sprig|sprigs|clove|cloves|slice|slices|strip|strips)\b/i;
+
+  function shoppingQty(quantity, category) {
+    if (!quantity) return null;
+    const q = quantity.trim();
+    // Always strip pure cooking measurements
+    if (cookingMeasures.test(q)) return null;
+    // Strip quantities that start with a number then a cooking measure
+    if (/^\d[\d\s/\.]*\s*(tbsp|tsp|cup|cups|tablespoon|teaspoon|pinch|dash|sprig|sprigs|clove|cloves)\b/i.test(q)) return null;
+    // Strip "to taste" and similar
+    if (/^to taste$/i.test(q)) return null;
+    // Pantry items bought in bottles/jars — strip cooking amounts
+    if (category === 'Pantry' && /^\d[\d\s/\.]*\s*(tbsp|tsp|cup|oz)\b/i.test(q)) return null;
+    // Keep shopping units: lb, lbs, oz (package), can, pack, bunch, loaf, jar, bottle, bag, box, head, count
+    return q;
+  }
+
+  // Deduplicate by name (case-insensitive), keeping first occurrence
+  const seen = new Set();
   const grouped = {};
   for (const row of [...mealIngredients, ...staples]) {
+    const key = row.name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
     const cat = row.category || 'Other';
     if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push({ name: row.name, quantity: row.quantity || null });
+    grouped[cat].push({ name: row.name, quantity: shoppingQty(row.quantity, row.category) });
   }
 
   res.json({ weekStart, categories: grouped });
