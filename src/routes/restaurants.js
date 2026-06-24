@@ -24,13 +24,17 @@ router.post('/', async (req, res) => {
       },
     });
 
+    const rawText = await response.text();
     if (!response.ok) {
-      const err = await response.text();
-      console.error('Foursquare error:', response.status, err);
-      return res.status(502).json({ error: 'Could not reach restaurant data. Check your API key.' });
+      console.error('Foursquare error:', response.status, rawText.slice(0, 300));
+      return res.status(502).json({ error: `Foursquare ${response.status}: ${rawText.slice(0, 200)}` });
+    }
+    let data;
+    try { data = JSON.parse(rawText); } catch(e) {
+      console.error('Foursquare bad JSON:', rawText.slice(0, 300));
+      return res.status(502).json({ error: 'Bad response from Foursquare. Check API key.' });
     }
 
-    const data = await response.json();
     const results = (data.results || []).map(r => {
       const category = r.categories && r.categories[0] ? r.categories[0].name : 'Restaurant';
       const address = r.location
