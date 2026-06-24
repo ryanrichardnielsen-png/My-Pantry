@@ -629,6 +629,22 @@
     margin-bottom: 10px;
   }
 
+  /* ── SLOT BUTTONS ── */
+  .slot-btn {
+    flex: 1;
+    padding: 6px 4px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .slot-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+
   /* ── EMPTY STATE ── */
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
   .empty-state p { margin-top: 8px; line-height: 1.5; }
@@ -881,8 +897,15 @@
       <span class="modal-title" id="pick-modal-title">Choose Meal</span>
       <button class="modal-close" onclick="closePickModal()">✕</button>
     </div>
+    <!-- Slot selector -->
+    <div style="display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--border)">
+      <button class="slot-btn active" onclick="selectSlot('Breakfast',this)">Breakfast</button>
+      <button class="slot-btn" onclick="selectSlot('Lunch',this)">Lunch</button>
+      <button class="slot-btn active-dinner" onclick="selectSlot('Dinner',this)">Dinner</button>
+      <button class="slot-btn" onclick="selectSlot('Snack',this)">Snack</button>
+    </div>
     <div id="pick-meal-list"></div>
-    <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="clearDayMeal()">Clear this day</button>
+    <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="clearDayMeal()">Clear this slot</button>
   </div>
 </div>
 
@@ -1009,8 +1032,9 @@ let currentWeekOffset = 0;
 let allMeals = [];
 let editingMealId = null;
 let pickingDay = null;
+let pickingSlot = 'Dinner';
 let activeDow = null;
-let weekData = {};
+let weekData = {}; // weekData[dow][slot] = entry
 
 // ── Utilities ────────────────────────────────────────────
 function getWeekStart(offset = 0) {
@@ -1068,15 +1092,13 @@ function getDynamicSubtitle() {
   const now = new Date();
   const todayDow = now.getDay();
   const tomorrowDow = (todayDow + 1) % 7;
-  const tonight = weekData[todayDow];
-  const tomorrow = weekData[tomorrowDow];
-  const hasDinner = tonight && tonight.meal_name;
-  const hasTomorrow = tomorrow && tomorrow.meal_name;
+  const tonightEntry = weekData[todayDow] && weekData[todayDow]['Dinner'];
+  const tomorrowDinner = weekData[tomorrowDow] && weekData[tomorrowDow]['Dinner'];
   const tomorrowName = DAYS[tomorrowDow === 0 ? 6 : tomorrowDow - 1];
 
-  if (!hasDinner) return "What's for dinner tonight?";
-  if (!hasTomorrow) return `${tonight.meal_name} tonight — what about ${tomorrowName}?`;
-  return `${tonight.meal_name} tonight, ${tomorrow.meal_name} tomorrow`;
+  if (!tonightEntry) return "What's for dinner tonight?";
+  if (!tomorrowDinner) return `${tonightEntry.meal_name} tonight — what about ${tomorrowName}?`;
+  return `${tonightEntry.meal_name} tonight, ${tomorrowDinner.meal_name} tomorrow`;
 }
 
 async function loadWeek() {
@@ -1088,7 +1110,10 @@ async function loadWeek() {
 
   const data = await api('GET', `/week?week=${week}`);
   weekData = {};
-  (data.days || []).forEach(d => weekData[d.day_of_week] = d);
+  (data.days || []).forEach(d => {
+    if (!weekData[d.day_of_week]) weekData[d.day_of_week] = {};
+    weekData[d.day_of_week][d.meal_slot || 'Dinner'] = d;
+  });
 
   if (activeDow === null) {
     const todayDow = new Date().getDay();
@@ -1105,42 +1130,48 @@ function renderTodayCard() {
   if (currentWeekOffset !== 0) { container.innerHTML = ''; return; }
 
   const todayDow = new Date().getDay();
-  const entry = weekData[todayDow];
+  const todaySlots = weekData[todayDow] || {};
   const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const h = new Date().getHours();
+  // Pick the most relevant slot to highlight based on time
+  const focusSlot = h < 10 ? 'Breakfast' : h < 14 ? 'Lunch' : 'Dinner';
+  const SLOT_ORDER = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
-  if (!entry || !entry.meal_name) {
-    container.innerHTML = `
-      <div class="today-card">
-        <div class="today-card-label">Tonight</div>
-        <div class="today-card-empty">Nothing planned yet for ${todayName}.</div>
-        <button class="btn btn-sm" style="background:var(--orange);color:#fff;border:none" onclick="openPickModal(${todayDow}, '${todayName}')">+ Plan Tonight's Meal</button>
+  // Build slot rows
+  const slotRows = SLOT_ORDER.map(slot => {
+    const entry = todaySlots[slot];
+    if (entry && entry.meal_name) {
+      const meal = allMeals.find(m => m.id === entry.meal_id);
+      return `<div style="margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--orange);margin-bottom:3px">${slot}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${entry.meal_name}</div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleTodayMethod('today-method-${slot}',this)">Steps</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="openPickModal(${todayDow},'${todayName}','${slot}')">Change</button>
+          </div>
+        </div>
+        ${meal && meal.method ? `<div id="today-method-${slot}" style="display:none;margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line;border-top:1px solid var(--border);padding-top:8px">${meal.method}</div>` : ''}
       </div>`;
-    return;
-  }
-
-  const meal = allMeals.find(m => m.id === entry.meal_id);
-  const ings = (entry.ingredients || []).slice(0, 5).map(i =>
-    `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
-  ).join('');
+    }
+    return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;color:var(--muted)">${slot} <span style="color:var(--border)">—</span> nothing planned</div>
+      <button class="btn btn-ghost btn-sm" onclick="openPickModal(${todayDow},'${todayName}','${slot}')">+ Add</button>
+    </div>`;
+  }).join('');
 
   container.innerHTML = `
     <div class="today-card">
-      <div class="today-card-label">Tonight</div>
-      <div class="today-card-meal">${entry.meal_name}</div>
-      ${ings ? `<div class="today-card-tags">${ings}</div>` : ''}
-      <div style="display:flex;gap:8px">
-        ${meal && meal.method ? `<button class="btn btn-outline btn-sm" onclick="toggleTodayMethod(this)">Show steps</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="openPickModal(${todayDow}, '${todayName}')">Change</button>
-      </div>
-      ${meal && meal.method ? `<div id="today-method" style="display:none;margin-top:14px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line;border-top:1px solid var(--border);padding-top:12px">${meal.method}</div>` : ''}
+      <div class="today-card-label">Today</div>
+      ${slotRows}
     </div>`;
 }
 
-function toggleTodayMethod(btn) {
-  const el = document.getElementById('today-method');
+function toggleTodayMethod(id, btn) {
+  const el = document.getElementById(id);
   const shown = el.style.display !== 'none';
   el.style.display = shown ? 'none' : 'block';
-  btn.textContent = shown ? 'Show steps' : 'Hide steps';
+  btn.textContent = shown ? 'Steps' : 'Hide';
 }
 
 function renderWeekCalendar() {
@@ -1154,7 +1185,8 @@ function renderWeekCalendar() {
   for (let i = 1; i <= 7; i++) {
     const dow = i % 7; // Mon=1..Sat=6, Sun=0
     const entry = weekData[dow];
-    const hasMeal = entry && entry.meal_name;
+    const slots = weekData[dow] || {};
+    const hasMeal = Object.values(slots).some(s => s && s.meal_name);
     const isToday = dow === todayDow;
     const isActive = dow === activeDow && !isToday;
 
@@ -1181,84 +1213,72 @@ function renderWeekCalendar() {
 
 function renderDayDetail() {
   const panel = document.getElementById('day-detail-panel');
-  // Today is already shown in the hero card — hide detail panel for today
   const todayDow = currentWeekOffset === 0 ? new Date().getDay() : -1;
   if (activeDow === todayDow) { panel.innerHTML = ''; return; }
 
-  const entry = weekData[activeDow];
+  const slots = weekData[activeDow] || {};
   const dayName = DAYS[activeDow === 0 ? 6 : activeDow - 1];
+  const SLOT_ORDER = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
-  if (!entry || !entry.meal_name) {
-    panel.innerHTML = `
-      <div class="day-detail">
-        <div class="day-detail-header">
-          <span class="day-detail-empty">${dayName} — No meal planned</span>
-          <button class="btn btn-orange btn-sm" onclick="openPickModal(${activeDow}, '${dayName}')">+ Plan Meal</button>
+  const slotRows = SLOT_ORDER.map(slot => {
+    const entry = slots[slot];
+    if (entry && entry.meal_name) {
+      const meal = allMeals.find(m => m.id === entry.meal_id);
+      const ings = (entry.ingredients || []).map(i =>
+        `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
+      return `<div class="day-detail-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="detail-section-label" style="margin:0;color:var(--orange)">${slot}</div>
+          <div style="display:flex;gap:4px">
+            ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleDayMethod('dm-${activeDow}-${slot}',this)">Steps</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="openPickModal(${activeDow},'${dayName}','${slot}')">Change</button>
+          </div>
         </div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px">${entry.meal_name}</div>
+        ${ings ? `<div>${ings}</div>` : ''}
+        ${meal && meal.method ? `<div id="dm-${activeDow}-${slot}" style="display:none;margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line">${meal.method}</div>` : ''}
       </div>`;
-    return;
-  }
-
-  const ings = (entry.ingredients || []).map(i =>
-    `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`
-  ).join('');
+    }
+    return `<div class="day-detail-section" style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--muted)">${slot} — nothing planned</span>
+      <button class="btn btn-ghost btn-sm" onclick="openPickModal(${activeDow},'${dayName}','${slot}')">+ Add</button>
+    </div>`;
+  }).join('');
 
   panel.innerHTML = `
     <div class="day-detail">
       <div class="day-detail-header">
-        <div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">${dayName}</div>
-          <div class="day-detail-name">${entry.meal_name}</div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-outline btn-sm" onclick="openPickModal(${activeDow}, '${dayName}')">Change</button>
-        </div>
+        <span style="font-size:13px;font-weight:700">${dayName}</span>
       </div>
-      ${ings || entry.meal_notes || entry.ingredients?.length ? `
-      <div class="day-detail-body">
-        ${ings ? `<div class="day-detail-section">
-          <div class="detail-section-label">Ingredients</div>
-          <div>${ings}</div>
-        </div>` : ''}
-        ${entry.meal_notes ? `<div class="day-detail-section">
-          <div class="detail-section-label">Notes</div>
-          <div style="font-size:13px;color:var(--muted)">${entry.meal_notes}</div>
-        </div>` : ''}
-        ${entry.ingredients && entry.ingredients.length ? `
-        <div class="day-detail-section">
-          <button class="btn btn-ghost" style="padding:0;font-size:11px" onclick="toggleDayMethod(this)">Show method &darr;</button>
-          <div class="day-method" style="display:none;margin-top:10px">
-            <div class="detail-section-label">Method</div>
-            <div class="method-steps" id="method-${activeDow}"></div>
-          </div>
-        </div>` : ''}
-      </div>` : ''}
+      <div class="day-detail-body">${slotRows}</div>
     </div>`;
-
-  // Load method from meal library
-  if (entry.meal_id) {
-    const meal = allMeals.find(m => m.id === entry.meal_id);
-    if (meal && meal.method) {
-      const el = document.getElementById(`method-${activeDow}`);
-      if (el) el.textContent = meal.method;
-    }
-  }
 }
 
-function toggleDayMethod(btn) {
-  const methodDiv = btn.nextElementSibling;
-  const shown = methodDiv.style.display !== 'none';
-  methodDiv.style.display = shown ? 'none' : 'block';
-  btn.innerHTML = shown ? 'Show method &darr;' : 'Hide method &uarr;';
+function toggleDayMethod(id, btn) {
+  const el = document.getElementById(id);
+  const shown = el.style.display !== 'none';
+  el.style.display = shown ? 'none' : 'block';
+  btn.textContent = shown ? 'Steps' : 'Hide';
 }
 
-function openPickModal(dow, dayName) {
+function selectSlot(slot, btn) {
+  pickingSlot = slot;
+  document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function openPickModal(dow, dayName, slot) {
   pickingDay = dow;
-  document.getElementById('pick-modal-title').textContent = `${dayName} — Choose Meal`;
+  pickingSlot = slot || 'Dinner';
+  document.getElementById('pick-modal-title').textContent = `${dayName}`;
+  // Set active slot button
+  document.querySelectorAll('.slot-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === pickingSlot);
+  });
   const list = document.getElementById('pick-meal-list');
   list.innerHTML = '';
   if (!allMeals.length) {
-    list.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">No meals in library yet.<br>Add some in the Meals tab.</p>';
+    list.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">No meals yet. Add some in the Meals tab.</p>';
   } else {
     const grouped = {};
     allMeals.forEach(m => {
@@ -1291,14 +1311,14 @@ function closePickModal() { document.getElementById('pick-modal').classList.remo
 
 async function assignMeal(mealId) {
   const week = getWeekStart(currentWeekOffset);
-  await api('PUT', `/week/${pickingDay}`, { meal_id: mealId, week });
+  await api('PUT', `/week/${pickingDay}`, { meal_id: mealId, week, meal_slot: pickingSlot });
   closePickModal();
   loadWeek();
 }
 
 async function clearDayMeal() {
   const week = getWeekStart(currentWeekOffset);
-  await api('DELETE', `/week/${pickingDay}?week=${week}`);
+  await api('DELETE', `/week/${pickingDay}?week=${week}&slot=${encodeURIComponent(pickingSlot)}`);
   closePickModal();
   loadWeek();
 }

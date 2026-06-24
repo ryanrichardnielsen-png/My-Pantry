@@ -20,6 +20,17 @@ async function init() {
     ALTER TABLE meals ADD COLUMN IF NOT EXISTS source_url TEXT;
     ALTER TABLE meals ADD COLUMN IF NOT EXISTS servings INTEGER DEFAULT 4;
     ALTER TABLE meals ADD COLUMN IF NOT EXISTS meal_category TEXT DEFAULT 'Dinner';
+    ALTER TABLE week_plan ADD COLUMN IF NOT EXISTS meal_slot TEXT DEFAULT 'Dinner';
+    DO $$ BEGIN
+      BEGIN
+        ALTER TABLE week_plan DROP CONSTRAINT week_plan_week_start_day_of_week_key;
+      EXCEPTION WHEN undefined_object THEN NULL;
+      END;
+      BEGIN
+        ALTER TABLE week_plan ADD CONSTRAINT week_plan_slot_unique UNIQUE(week_start, day_of_week, meal_slot);
+      EXCEPTION WHEN duplicate_table THEN NULL;
+      END;
+    END $$;
 
     CREATE TABLE IF NOT EXISTS ingredients (
       id SERIAL PRIMARY KEY,
