@@ -484,20 +484,54 @@
 
   /* ── HOME HERO ── */
   .home-hero {
-    padding: 28px 0 20px;
+    padding: 26px 0 22px;
+  }
+  .hero-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: .3px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: .7px;
   }
   .home-greeting {
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 800;
     color: var(--text);
-    letter-spacing: -0.7px;
-    line-height: 1.15;
-    margin-bottom: 4px;
+    letter-spacing: -0.9px;
+    line-height: 1.12;
+    margin-bottom: 14px;
   }
-  .home-date {
-    font-size: 15px;
-    font-weight: 500;
+  .hero-pills {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .hero-pill-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .hero-pill-empty {
     color: var(--muted);
+    background: transparent;
+    box-shadow: none;
+    border: 1.5px dashed var(--border);
   }
 
   /* ── TODAY CARD ── */
@@ -797,8 +831,9 @@
 
     <!-- Hero -->
     <div class="home-hero">
+      <div class="hero-eyebrow" id="hero-eyebrow"></div>
       <div class="home-greeting" id="home-greeting"></div>
-      <div class="home-date" id="home-date"></div>
+      <div class="hero-pills" id="hero-pills"></div>
     </div>
 
     <!-- Today card -->
@@ -1094,23 +1129,34 @@ function changeWeek(dir) { currentWeekOffset += dir; activeDow = null; loadWeek(
 function renderHero() {
   const now = new Date();
   const h = now.getHours();
-  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('home-greeting').textContent = greeting + ', Ryan & MJ';
-  document.getElementById('home-date').textContent = getDynamicSubtitle();
-}
+  const greeting = h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,';
 
-function getDynamicSubtitle() {
-  if (currentWeekOffset !== 0) return 'Planning ahead';
-  const now = new Date();
+  const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const monthDay = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+
+  document.getElementById('hero-eyebrow').textContent = `${dayName} · ${monthDay}`;
+  document.getElementById('home-greeting').innerHTML = `${greeting}<br>Ryan & MJ`;
+
+  // Meal pills for today
+  if (currentWeekOffset !== 0) {
+    document.getElementById('hero-pills').innerHTML = `<span class="hero-pill hero-pill-empty">Planning ahead</span>`;
+    return;
+  }
+
+  const SLOT_COLORS = { Breakfast: 'var(--breakfast)', Lunch: 'var(--lunch)', Dinner: 'var(--dinner)', Snack: 'var(--snack)' };
   const todayDow = now.getDay();
-  const tomorrowDow = (todayDow + 1) % 7;
-  const tonightEntry = weekData[todayDow] && weekData[todayDow]['Dinner'];
-  const tomorrowDinner = weekData[tomorrowDow] && weekData[tomorrowDow]['Dinner'];
-  const tomorrowName = DAYS[tomorrowDow === 0 ? 6 : tomorrowDow - 1];
+  const todaySlots = weekData[todayDow] || {};
+  const SLOT_ORDER = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
-  if (!tonightEntry) return "What's for dinner tonight?";
-  if (!tomorrowDinner) return `${tonightEntry.meal_name} tonight — what about ${tomorrowName}?`;
-  return `${tonightEntry.meal_name} tonight, ${tomorrowDinner.meal_name} tomorrow`;
+  const pills = SLOT_ORDER.map(slot => {
+    const entry = todaySlots[slot];
+    if (entry && entry.meal_name) {
+      return `<span class="hero-pill"><span class="hero-pill-dot" style="background:${SLOT_COLORS[slot]}"></span>${entry.meal_name}</span>`;
+    }
+    return `<span class="hero-pill hero-pill-empty">${slot}</span>`;
+  }).join('');
+
+  document.getElementById('hero-pills').innerHTML = pills;
 }
 
 async function loadWeek() {
