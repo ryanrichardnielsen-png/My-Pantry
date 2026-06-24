@@ -9,14 +9,21 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --orange:  #e06e2e;
-    --dark:    #0f1117;
-    --bg:      #f4f5f7;
-    --card:    #ffffff;
-    --border:  #e8eaed;
-    --text:    #1a1a1a;
-    --muted:   #888;
-    --radius:  10px;
+    --orange:    #e06e2e;
+    --dark:      #141519;
+    --bg:        #f5f3ef;
+    --card:      #ffffff;
+    --border:    #eceae5;
+    --text:      #18181b;
+    --muted:     #9b9490;
+    --radius:    16px;
+    --shadow:    0 2px 12px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.11), 0 2px 8px rgba(0,0,0,.06);
+    /* meal slot colors */
+    --breakfast: #f59e0b;
+    --lunch:     #16a34a;
+    --dinner:    #e06e2e;
+    --snack:     #8b5cf6;
   }
 
   body {
@@ -31,7 +38,7 @@
   /* ── HEADER ── */
   header {
     background: var(--dark);
-    height: 52px;
+    height: 58px;
     display: flex;
     align-items: center;
     padding: 0 20px;
@@ -39,35 +46,36 @@
     top: 0;
     z-index: 100;
     gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
   }
   .header-brand {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 10px;
     flex-shrink: 0;
   }
   .header-mark {
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     background: var(--orange);
-    border-radius: 6px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     color: #fff;
     font-style: italic;
     letter-spacing: -0.5px;
   }
   .header-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: #fff;
-    letter-spacing: -0.2px;
+    letter-spacing: -0.3px;
   }
 
-  /* ── NAV PILLS ── */
+  /* ── NAV ── */
   nav {
     display: flex;
     gap: 2px;
@@ -75,19 +83,20 @@
     justify-content: flex-end;
   }
   nav button {
-    padding: 6px 14px;
+    padding: 7px 14px;
     border: none;
     background: transparent;
-    color: rgba(255,255,255,0.45);
-    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
     font-weight: 600;
     font-family: 'DM Sans', sans-serif;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 8px;
     transition: background .15s, color .15s;
+    letter-spacing: -0.2px;
   }
   nav button:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.8); }
-  nav button.active { background: rgba(255,255,255,.12); color: #fff; }
+  nav button.active { background: rgba(255,255,255,.1); color: #fff; }
 
   /* ── LAYOUT ── */
   main { padding: 20px 16px; max-width: 600px; margin: 0 auto; }
@@ -188,24 +197,18 @@
   /* ── DAY DETAIL ── */
   .day-detail {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border: none;
+    border-radius: 20px;
     overflow: hidden;
+    box-shadow: var(--shadow);
   }
-  .day-detail-header {
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .day-detail-name { font-size: 14px; font-weight: 700; }
-  .day-detail-empty { font-size: 13px; color: var(--muted); }
-  .day-detail-body { padding: 14px 16px; }
+  .day-detail-body { padding: 16px 20px; }
   .day-detail-section {
-    margin-bottom: 14px;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
   }
-  .day-detail-section:last-child { margin-bottom: 0; }
+  .day-detail-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
   .detail-section-label {
     font-size: 10px;
     font-weight: 700;
@@ -272,15 +275,16 @@
   /* ── TABLE CARD ── */
   .table-card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border: none;
+    border-radius: 18px;
     overflow: hidden;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
   }
   .table-card-header {
-    padding: 12px 16px;
+    padding: 14px 18px;
     border-bottom: 1px solid var(--border);
-    background: #fafafa;
+    background: var(--card);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -480,36 +484,75 @@
 
   /* ── HOME HERO ── */
   .home-hero {
-    padding: 22px 0 16px;
+    padding: 28px 0 20px;
   }
   .home-greeting {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 800;
     color: var(--text);
-    margin-bottom: 2px;
+    letter-spacing: -0.7px;
+    line-height: 1.15;
+    margin-bottom: 4px;
   }
   .home-date {
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--muted);
   }
 
   /* ── TODAY CARD ── */
   .today-card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--orange);
-    border-radius: 14px;
-    padding: 18px 20px;
+    border-radius: 20px;
+    padding: 6px 0 4px;
     margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
   }
   .today-card-label {
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .7px;
-    color: var(--orange);
-    margin-bottom: 6px;
+    letter-spacing: .8px;
+    color: var(--muted);
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .today-slot-row {
+    display: flex;
+    align-items: center;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+  .today-slot-row:last-child { border-bottom: none; }
+  .slot-indicator {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .slot-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    width: 62px;
+    flex-shrink: 0;
+    letter-spacing: .2px;
+  }
+  .slot-meal-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .slot-empty {
+    font-size: 13px;
+    color: var(--border);
+    flex: 1;
   }
   .today-card-meal {
     font-size: 18px;
@@ -530,7 +573,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
   .week-calendar {
     display: grid;
@@ -540,36 +583,39 @@
   }
   .cal-day {
     background: var(--card);
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 8px 4px 6px;
+    border: none;
+    border-radius: 14px;
+    padding: 10px 4px 8px;
     text-align: center;
     cursor: pointer;
-    transition: border-color .15s;
-    min-height: 64px;
+    transition: all .15s;
+    min-height: 66px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-shadow: var(--shadow);
   }
-  .cal-day:hover { border-color: var(--orange); }
-  .cal-day.today { border-color: var(--orange); }
-  .cal-day.active { background: var(--orange); border-color: var(--orange); }
+  .cal-day:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+  .cal-day.today { background: var(--dark); }
+  .cal-day.active { background: var(--orange); box-shadow: 0 4px 16px rgba(224,110,46,.35); }
   .cal-day-name {
     font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .4px;
+    letter-spacing: .5px;
     color: var(--muted);
-    margin-bottom: 4px;
-  }
-  .cal-day.active .cal-day-name { color: rgba(255,255,255,.7); }
-  .cal-day.today .cal-day-name { color: var(--orange); }
-  .cal-day-num {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
     margin-bottom: 5px;
   }
+  .cal-day.today .cal-day-name { color: rgba(255,255,255,.5); }
+  .cal-day.active .cal-day-name { color: rgba(255,255,255,.7); }
+  .cal-day-num {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 5px;
+    letter-spacing: -0.3px;
+  }
+  .cal-day.today .cal-day-num { color: #fff; }
   .cal-day.active .cal-day-num { color: #fff; }
   .cal-dot {
     width: 5px; height: 5px;
@@ -577,7 +623,8 @@
     background: var(--orange);
     margin-top: auto;
   }
-  .cal-day.active .cal-dot { background: rgba(255,255,255,.7); }
+  .cal-day.today .cal-dot { background: var(--orange); }
+  .cal-day.active .cal-dot { background: rgba(255,255,255,.8); }
 
   /* ── DATE NIGHT CARD ── */
   .date-night-card {
@@ -1102,25 +1149,28 @@ function renderTodayCard() {
   const focusSlot = h < 10 ? 'Breakfast' : h < 14 ? 'Lunch' : 'Dinner';
   const SLOT_ORDER = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
-  // Build slot rows
+  const SLOT_COLORS = { Breakfast: 'var(--breakfast)', Lunch: 'var(--lunch)', Dinner: 'var(--dinner)', Snack: 'var(--snack)' };
+
   const slotRows = SLOT_ORDER.map(slot => {
     const entry = todaySlots[slot];
+    const color = SLOT_COLORS[slot];
     if (entry && entry.meal_name) {
       const meal = allMeals.find(m => m.id === entry.meal_id);
-      return `<div style="margin-bottom:10px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--orange);margin-bottom:3px">${slot}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <div style="font-size:14px;font-weight:700;color:var(--text)">${entry.meal_name}</div>
-          <div style="display:flex;gap:4px;flex-shrink:0">
-            ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleTodayMethod('today-method-${slot}',this)">Steps</button>` : ''}
-            <button class="btn btn-ghost btn-sm" onclick="openPickModal(${todayDow},'${todayName}','${slot}')">Change</button>
-          </div>
+      return `<div class="today-slot-row">
+        <div class="slot-indicator" style="background:${color}"></div>
+        <div class="slot-label">${slot}</div>
+        <div class="slot-meal-name">${entry.meal_name}</div>
+        <div style="display:flex;gap:2px;flex-shrink:0">
+          ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleTodayMethod('today-method-${slot}',this)">Steps</button>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="openPickModal(${todayDow},'${todayName}','${slot}')">Change</button>
         </div>
-        ${meal && meal.method ? `<div id="today-method-${slot}" style="display:none;margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line;border-top:1px solid var(--border);padding-top:8px">${meal.method}</div>` : ''}
-      </div>`;
+      </div>
+      ${meal && meal.method ? `<div id="today-method-${slot}" style="display:none;padding:12px 20px 14px;font-size:13px;line-height:1.8;color:var(--muted);white-space:pre-line;background:#faf9f7;border-top:1px solid var(--border)">${meal.method}</div>` : ''}`;
     }
-    return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:12px;color:var(--muted)">${slot} <span style="color:var(--border)">—</span> nothing planned</div>
+    return `<div class="today-slot-row">
+      <div class="slot-indicator" style="background:${color};opacity:.3"></div>
+      <div class="slot-label" style="color:var(--border)">${slot}</div>
+      <div class="slot-empty">nothing planned</div>
       <button class="btn btn-ghost btn-sm" onclick="openPickModal(${todayDow},'${todayName}','${slot}')">+ Add</button>
     </div>`;
   }).join('');
