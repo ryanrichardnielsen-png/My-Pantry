@@ -16,6 +16,7 @@ app.use('/api/staples', require('./routes/staples'));
 app.use('/api/suggest', require('./routes/suggest'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/scan', require('./routes/scan'));
+app.use('/api/restaurants', require('./routes/restaurants'));
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));

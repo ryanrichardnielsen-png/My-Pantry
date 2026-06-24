@@ -579,6 +579,56 @@
   }
   .cal-day.active .cal-dot { background: rgba(255,255,255,.7); }
 
+  /* ── DATE NIGHT CARD ── */
+  .date-night-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-top: 16px;
+    margin-bottom: 24px;
+  }
+  .date-night-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .date-night-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .date-night-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .restaurant-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .restaurant-card:last-child { margin-bottom: 0; }
+  .restaurant-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .restaurant-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .restaurant-desc {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
   /* ── EMPTY STATE ── */
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
   .empty-state p { margin-top: 8px; line-height: 1.5; }
@@ -701,6 +751,43 @@
 
     <!-- Selected day detail (when tapping a non-today day) -->
     <div id="day-detail-panel"></div>
+
+    <!-- Date Night section -->
+    <div class="date-night-card">
+      <div class="date-night-header">
+        <div>
+          <div class="date-night-title">Feeling like going out?</div>
+          <div class="date-night-sub">Let Claude pick a date night spot</div>
+        </div>
+        <button class="btn btn-orange btn-sm" onclick="toggleDateNight()">Find a Restaurant</button>
+      </div>
+      <div id="date-night-panel" style="display:none;margin-top:16px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="form-row" style="margin:0">
+            <label>Your area or neighborhood</label>
+            <input id="dn-area" type="text" placeholder="e.g. Burlington VT, South End Boston…">
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="form-row" style="margin:0;flex:1">
+              <label>Craving</label>
+              <input id="dn-cuisine" type="text" placeholder="e.g. Italian, sushi, anything…">
+            </div>
+            <div class="form-row" style="margin:0;flex:1">
+              <label>Vibe</label>
+              <select id="dn-vibe">
+                <option>Romantic date night</option>
+                <option>Casual & fun</option>
+                <option>Special occasion</option>
+                <option>Quick & easy</option>
+                <option>Trying something new</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-orange btn-block" id="dn-btn" onclick="fetchRestaurants()">Ask Claude</button>
+        </div>
+        <div id="dn-results" style="margin-top:14px"></div>
+      </div>
+    </div>
   </div>
 
   <!-- MEALS TAB -->
@@ -973,7 +1060,23 @@ function renderHero() {
   const h = now.getHours();
   const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('home-greeting').textContent = greeting + ', Ryan & MJ';
-  document.getElementById('home-date').textContent = "What's for dinner?";
+  document.getElementById('home-date').textContent = getDynamicSubtitle();
+}
+
+function getDynamicSubtitle() {
+  if (currentWeekOffset !== 0) return 'Planning ahead';
+  const now = new Date();
+  const todayDow = now.getDay();
+  const tomorrowDow = (todayDow + 1) % 7;
+  const tonight = weekData[todayDow];
+  const tomorrow = weekData[tomorrowDow];
+  const hasDinner = tonight && tonight.meal_name;
+  const hasTomorrow = tomorrow && tomorrow.meal_name;
+  const tomorrowName = DAYS[tomorrowDow === 0 ? 6 : tomorrowDow - 1];
+
+  if (!hasDinner) return "What's for dinner tonight?";
+  if (!hasTomorrow) return `${tonight.meal_name} tonight — what about ${tomorrowName}?`;
+  return `${tonight.meal_name} tonight, ${tomorrow.meal_name} tomorrow`;
 }
 
 async function loadWeek() {
@@ -1691,6 +1794,56 @@ async function saveScanResult() {
   document.getElementById('scan-result').innerHTML = `<p style="color:#16a34a;font-size:12px;font-weight:600;text-align:center;padding:8px">${r.name} added to library.</p>`;
   _scanPages = [];
   renderScanPages();
+}
+
+// ── Date Night ───────────────────────────────────────────
+function toggleDateNight() {
+  const panel = document.getElementById('date-night-panel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) document.getElementById('dn-area').focus();
+}
+
+async function fetchRestaurants() {
+  const area = document.getElementById('dn-area').value.trim();
+  const cuisine = document.getElementById('dn-cuisine').value.trim();
+  const vibe = document.getElementById('dn-vibe').value;
+  const btn = document.getElementById('dn-btn');
+  const results = document.getElementById('dn-results');
+
+  if (!area) {
+    document.getElementById('dn-area').focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Asking Claude…';
+  results.innerHTML = '<p style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Finding spots near you…</p>';
+
+  try {
+    const data = await api('POST', '/restaurants', { area, cuisine, vibe });
+    if (data.error) {
+      results.innerHTML = `<p style="color:#dc2626;font-size:12px">${data.error}</p>`;
+      btn.disabled = false; btn.textContent = 'Ask Claude'; return;
+    }
+
+    results.innerHTML = '';
+    data.restaurants.forEach(r => {
+      const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(r.name + ' ' + area)}`;
+      const card = document.createElement('div');
+      card.className = 'restaurant-card';
+      card.innerHTML = `
+        <div class="restaurant-name">${r.name}</div>
+        <div class="restaurant-meta">${r.cuisine} &middot; ${r.price}</div>
+        <div class="restaurant-desc">${r.description}</div>
+        <a href="${mapsUrl}" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none">Open in Maps</a>`;
+      results.appendChild(card);
+    });
+  } catch (e) {
+    results.innerHTML = '<p style="color:#dc2626;font-size:12px">Something went wrong. Try again.</p>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Try again';
 }
 
 function fileToBase64(file) {
