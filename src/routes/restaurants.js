@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
   });
 
   try {
-    const response = await fetch(`https://api.foursquare.com/v3/places/search?${params}`, {
+    const response = await fetch(`https://places.foursquare.com/v3/places/search?${params}`, {
       headers: {
         Authorization: process.env.FOURSQUARE_API_KEY,
         Accept: 'application/json',
