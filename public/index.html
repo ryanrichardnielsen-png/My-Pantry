@@ -1213,45 +1213,32 @@ function renderWeekCalendar() {
 
 function renderDayDetail() {
   const panel = document.getElementById('day-detail-panel');
-  const todayDow = currentWeekOffset === 0 ? new Date().getDay() : -1;
   if (activeDow === null) { panel.innerHTML = ''; return; }
 
   const slots = weekData[activeDow] || {};
   const dayName = DAYS[activeDow === 0 ? 6 : activeDow - 1];
   const SLOT_ORDER = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+  const plannedSlots = SLOT_ORDER.filter(slot => slots[slot] && slots[slot].meal_name);
 
-  const slotRows = SLOT_ORDER.map(slot => {
+  if (plannedSlots.length === 0) { panel.innerHTML = ''; return; }
+
+  const recipeCards = plannedSlots.map(slot => {
     const entry = slots[slot];
-    if (entry && entry.meal_name) {
-      const meal = allMeals.find(m => m.id === entry.meal_id);
-      const ings = (entry.ingredients || []).map(i =>
-        `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
-      return `<div class="day-detail-section">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div class="detail-section-label" style="margin:0;color:var(--orange)">${slot}</div>
-          <div style="display:flex;gap:4px">
-            ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleDayMethod('dm-${activeDow}-${slot}',this)">Steps</button>` : ''}
-            <button class="btn btn-ghost btn-sm" onclick="openPickModal(${activeDow},'${dayName}','${slot}')">Change</button>
-          </div>
-        </div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:6px">${entry.meal_name}</div>
-        ${ings ? `<div>${ings}</div>` : ''}
-        ${meal && meal.method ? `<div id="dm-${activeDow}-${slot}" style="display:none;margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line">${meal.method}</div>` : ''}
-      </div>`;
-    }
-    return `<div class="day-detail-section" style="display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:12px;color:var(--muted)">${slot} — nothing planned</span>
-      <button class="btn btn-ghost btn-sm" onclick="openPickModal(${activeDow},'${dayName}','${slot}')">+ Add</button>
+    const meal = allMeals.find(m => m.id === entry.meal_id);
+    const ings = (entry.ingredients || []).map(i =>
+      `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
+    return `<div class="day-detail-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--orange);text-transform:uppercase">${slot}</div>
+        ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleDayMethod('dm-${activeDow}-${slot}',this)">Steps</button>` : ''}
+      </div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">${entry.meal_name}</div>
+      ${ings ? `<div style="margin-bottom:4px">${ings}</div>` : ''}
+      ${meal && meal.method ? `<div id="dm-${activeDow}-${slot}" style="display:none;margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line">${meal.method}</div>` : ''}
     </div>`;
   }).join('');
 
-  panel.innerHTML = `
-    <div class="day-detail">
-      <div class="day-detail-header">
-        <span style="font-size:13px;font-weight:700">${dayName}</span>
-      </div>
-      <div class="day-detail-body">${slotRows}</div>
-    </div>`;
+  panel.innerHTML = `<div class="day-detail"><div class="day-detail-body">${recipeCards}</div></div>`;
 }
 
 function toggleDayMethod(id, btn) {
