@@ -781,7 +781,8 @@
         <button class="btn btn-primary btn-sm" onclick="openMealModal()">+ Add</button>
       </div>
     </div>
-    <div class="day-pills" id="meal-category-pills" style="margin-bottom:14px"></div>
+    <div class="day-pills" id="meal-category-pills" style="margin-bottom:10px"></div>
+    <input id="meal-search" type="text" placeholder="Search recipes…" oninput="renderMeals()" style="margin-bottom:14px;width:100%;box-sizing:border-box">
     <div id="meals-list"></div>
   </div>
 
@@ -1302,7 +1303,11 @@ function renderMealCategoryPills() {
 function renderMeals() {
   const container = document.getElementById('meals-list');
   const countEl = document.getElementById('meals-count');
-  const filtered = activeMealCat === 'All' ? allMeals : allMeals.filter(m => (m.meal_category || 'Dinner') === activeMealCat);
+  const query = (document.getElementById('meal-search')?.value || '').toLowerCase();
+  const filtered = allMeals.filter(m =>
+    (activeMealCat === 'All' || (m.meal_category || 'Dinner') === activeMealCat) &&
+    (!query || m.name.toLowerCase().includes(query))
+  );
   if (countEl) countEl.textContent = `${allMeals.length} recipe${allMeals.length !== 1 ? 's' : ''} saved`;
 
   if (!filtered.length) {
