@@ -1188,7 +1188,7 @@ function renderWeekCalendar() {
     const slots = weekData[dow] || {};
     const hasMeal = Object.values(slots).some(s => s && s.meal_name);
     const isToday = dow === todayDow;
-    const isActive = dow === activeDow && !isToday;
+    const isActive = dow === activeDow;
 
     // Date number for this cell
     const cellDate = new Date(weekStart);
@@ -1214,7 +1214,7 @@ function renderWeekCalendar() {
 function renderDayDetail() {
   const panel = document.getElementById('day-detail-panel');
   const todayDow = currentWeekOffset === 0 ? new Date().getDay() : -1;
-  if (activeDow === todayDow) { panel.innerHTML = ''; return; }
+  if (activeDow === null) { panel.innerHTML = ''; return; }
 
   const slots = weekData[activeDow] || {};
   const dayName = DAYS[activeDow === 0 ? 6 : activeDow - 1];
