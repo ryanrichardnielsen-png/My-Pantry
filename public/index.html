@@ -489,43 +489,41 @@
     margin-bottom: 2px;
   }
   .home-date {
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--muted);
   }
 
   /* ── TODAY CARD ── */
   .today-card {
-    background: var(--dark);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--orange);
     border-radius: 14px;
     padding: 18px 20px;
     margin-bottom: 20px;
-    color: #fff;
   }
   .today-card-label {
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .7px;
-    color: rgba(255,255,255,.5);
+    color: var(--orange);
     margin-bottom: 6px;
   }
   .today-card-meal {
     font-size: 18px;
     font-weight: 700;
+    color: var(--text);
     margin-bottom: 12px;
     line-height: 1.3;
   }
   .today-card-empty {
     font-size: 14px;
-    color: rgba(255,255,255,.6);
+    color: var(--muted);
     margin-bottom: 14px;
   }
   .today-card-tags { margin-bottom: 12px; }
-  .today-card-tags .tag {
-    background: rgba(255,255,255,.1);
-    border-color: rgba(255,255,255,.15);
-    color: rgba(255,255,255,.85);
-  }
 
   /* ── WEEK CALENDAR ── */
   .week-calendar-header {
@@ -668,12 +666,11 @@
 <body>
 
 <header>
-  <div class="header-brand">
+  <div class="header-brand" onclick="showTab('week')" style="cursor:pointer">
     <div class="header-mark">MP</div>
     <span class="header-title">My Pantry</span>
   </div>
   <nav>
-    <button class="active" onclick="showTab('week')">Week</button>
     <button onclick="showTab('meals')">Meals</button>
     <button onclick="showTab('grocery')">Grocery</button>
     <button onclick="showTab('staples')">Staples</button>
@@ -959,7 +956,9 @@ function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  document.querySelectorAll('nav button')[['week','meals','grocery','staples'].indexOf(name)].classList.add('active');
+  // Week tab has no nav button — only the brand triggers it
+  const navIdx = ['meals','grocery','staples'].indexOf(name);
+  if (navIdx !== -1) document.querySelectorAll('nav button')[navIdx].classList.add('active');
   if (name === 'week') loadWeek();
   if (name === 'meals') loadMeals();
   if (name === 'grocery') loadGrocery();
@@ -974,7 +973,7 @@ function renderHero() {
   const h = now.getHours();
   const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('home-greeting').textContent = greeting + ', Ryan & MJ';
-  document.getElementById('home-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('home-date').textContent = "What's for dinner?";
 }
 
 async function loadWeek() {
@@ -1027,10 +1026,10 @@ function renderTodayCard() {
       <div class="today-card-meal">${entry.meal_name}</div>
       ${ings ? `<div class="today-card-tags">${ings}</div>` : ''}
       <div style="display:flex;gap:8px">
-        ${meal && meal.method ? `<button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" onclick="toggleTodayMethod(this)">Show steps</button>` : ''}
-        <button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:none" onclick="openPickModal(${todayDow}, '${todayName}')">Change</button>
+        ${meal && meal.method ? `<button class="btn btn-outline btn-sm" onclick="toggleTodayMethod(this)">Show steps</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="openPickModal(${todayDow}, '${todayName}')">Change</button>
       </div>
-      ${meal && meal.method ? `<div id="today-method" style="display:none;margin-top:14px;font-size:12px;line-height:1.7;color:rgba(255,255,255,.75);white-space:pre-line;border-top:1px solid rgba(255,255,255,.1);padding-top:12px">${meal.method}</div>` : ''}
+      ${meal && meal.method ? `<div id="today-method" style="display:none;margin-top:14px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line;border-top:1px solid var(--border);padding-top:12px">${meal.method}</div>` : ''}
     </div>`;
 }
 
