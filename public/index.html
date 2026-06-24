@@ -768,42 +768,6 @@
     <!-- Selected day detail (when tapping a non-today day) -->
     <div id="day-detail-panel"></div>
 
-    <!-- Date Night section -->
-    <div class="date-night-card">
-      <div class="date-night-header">
-        <div>
-          <div class="date-night-title">Feeling like going out?</div>
-          <div class="date-night-sub">Find a spot near you</div>
-        </div>
-        <button class="btn btn-orange btn-sm" onclick="toggleDateNight()">Find a Restaurant</button>
-      </div>
-      <div id="date-night-panel" style="display:none;margin-top:16px">
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div class="form-row" style="margin:0">
-            <label>Your area or neighborhood</label>
-            <input id="dn-area" type="text" placeholder="e.g. Burlington VT, South End Boston…">
-          </div>
-          <div style="display:flex;gap:8px">
-            <div class="form-row" style="margin:0;flex:1">
-              <label>Craving</label>
-              <input id="dn-cuisine" type="text" placeholder="e.g. Italian, sushi, anything…">
-            </div>
-            <div class="form-row" style="margin:0;flex:1">
-              <label>Vibe</label>
-              <select id="dn-vibe">
-                <option>Romantic date night</option>
-                <option>Casual & fun</option>
-                <option>Special occasion</option>
-                <option>Quick & easy</option>
-                <option>Trying something new</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn btn-orange btn-block" id="dn-btn" onclick="fetchRestaurants()">Find Restaurants</button>
-        </div>
-        <div id="dn-results" style="margin-top:14px"></div>
-      </div>
-    </div>
   </div>
 
   <!-- MEALS TAB -->
