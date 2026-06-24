@@ -1,44 +1,55 @@
 const express = require('express');
 const router = express.Router();
-const Anthropic = require('@anthropic-ai/sdk');
-
-const client = new Anthropic();
+const fetch = require('node-fetch');
 
 router.post('/', async (req, res) => {
   const { cuisine, vibe, area } = req.body;
-  if (!area) return res.status(400).json({ error: 'Please tell us your area or neighborhood.' });
+  if (!area) return res.status(400).json({ error: 'Please enter your area or neighborhood.' });
 
-  const message = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: `You are helping a couple choose a restaurant for a date night. Suggest 4 real restaurants based on these preferences:
+  const query = cuisine ? `${cuisine} restaurant` : 'restaurant';
 
-Area: ${area}
-Cuisine / craving: ${cuisine || 'anything good'}
-Vibe: ${vibe || 'relaxed date night'}
-
-Return ONLY a JSON array with no markdown. Each restaurant must have:
-- name: string (real restaurant name)
-- cuisine: string (e.g. "Italian", "Japanese", "Modern American")
-- description: string (one warm sentence about why this is a great pick for a date night — mention a signature dish or what makes the atmosphere special)
-- price: string (one of "$", "$$", "$$$", "$$$$")
-
-Only suggest real, well-known restaurants that actually exist in or near the specified area. If you are not confident a restaurant exists there, do not include it.
-
-Example: [{"name":"Chez Henri","cuisine":"French Bistro","description":"Cozy candlelit spot known for their duck confit and excellent wine list — perfect for a relaxed evening.","price":"$$$"}]`,
-    }],
+  const params = new URLSearchParams({
+    near: area,
+    query,
+    categories: '13000', // Food & Dining
+    limit: '6',
+    fields: 'name,categories,location,rating,price,photos,fsq_id',
   });
 
   try {
-    const cleaned = message.content[0].text.trim()
-      .replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
-    const restaurants = JSON.parse(cleaned);
-    res.json({ restaurants });
+    const response = await fetch(`https://api.foursquare.com/v3/places/search?${params}`, {
+      headers: {
+        Authorization: process.env.FOURSQUARE_API_KEY,
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('Foursquare error:', response.status, err);
+      return res.status(502).json({ error: 'Could not reach restaurant data. Check your API key.' });
+    }
+
+    const data = await response.json();
+    const results = (data.results || []).map(r => {
+      const category = r.categories && r.categories[0] ? r.categories[0].name : 'Restaurant';
+      const address = r.location
+        ? [r.location.address, r.location.locality].filter(Boolean).join(', ')
+        : area;
+      const price = r.price ? '$'.repeat(r.price) : null;
+      const rating = r.rating ? (r.rating / 2).toFixed(1) : null; // Foursquare is /10, show /5
+      const photo = r.photos && r.photos[0]
+        ? `${r.photos[0].prefix}300x200${r.photos[0].suffix}`
+        : null;
+      const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(r.name + ' ' + address)}`;
+
+      return { name: r.name, category, address, price, rating, photo, mapsUrl };
+    });
+
+    res.json({ restaurants: results });
   } catch (e) {
-    console.error('Restaurant parse error:', e.message);
-    res.status(500).json({ error: 'Could not get suggestions. Try again.' });
+    console.error('Restaurant fetch error:', e.message);
+    res.status(500).json({ error: 'Something went wrong. Try again.' });
   }
 });
 
