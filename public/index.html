@@ -799,7 +799,7 @@
               </select>
             </div>
           </div>
-          <button class="btn btn-orange btn-block" id="dn-btn" onclick="fetchRestaurants()">Ask Claude</button>
+          <button class="btn btn-orange btn-block" id="dn-btn" onclick="fetchRestaurants()">Find Restaurants</button>
         </div>
         <div id="dn-results" style="margin-top:14px"></div>
       </div>
@@ -1844,7 +1844,7 @@ async function fetchRestaurants() {
     const data = await api('POST', '/restaurants', { area, cuisine, vibe });
     if (data.error) {
       results.innerHTML = `<p style="color:#dc2626;font-size:12px">${data.error}</p>`;
-      btn.disabled = false; btn.textContent = 'Ask Claude'; return;
+      btn.disabled = false; btn.textContent = 'Find Restaurants'; return;
     }
 
     results.innerHTML = '';
