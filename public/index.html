@@ -1285,27 +1285,39 @@ function renderDayDetail() {
   const slots = weekData[activeDow] || {};
   const dayName = DAYS[activeDow === 0 ? 6 : activeDow - 1];
   const SLOT_ORDER = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
-  const plannedSlots = SLOT_ORDER.filter(slot => slots[slot] && slots[slot].meal_name);
+  const SLOT_COLORS = { Breakfast: 'var(--breakfast)', Lunch: 'var(--lunch)', Dinner: 'var(--dinner)', Snack: 'var(--snack)' };
 
-  if (plannedSlots.length === 0) { panel.innerHTML = ''; return; }
-
-  const recipeCards = plannedSlots.map(slot => {
+  const rows = SLOT_ORDER.map(slot => {
     const entry = slots[slot];
-    const meal = allMeals.find(m => m.id === entry.meal_id);
-    const ings = (entry.ingredients || []).map(i =>
-      `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
-    return `<div class="day-detail-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--orange);text-transform:uppercase">${slot}</div>
-        ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleDayMethod('dm-${activeDow}-${slot}',this)">Steps</button>` : ''}
-      </div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:6px">${entry.meal_name}</div>
-      ${ings ? `<div style="margin-bottom:4px">${ings}</div>` : ''}
-      ${meal && meal.method ? `<div id="dm-${activeDow}-${slot}" style="display:none;margin-top:8px;font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line">${meal.method}</div>` : ''}
+    const color = SLOT_COLORS[slot];
+    if (entry && entry.meal_name) {
+      const meal = allMeals.find(m => m.id === entry.meal_id);
+      const ings = (entry.ingredients || []).map(i =>
+        `<span class="tag">${i.quantity ? i.quantity + ' ' : ''}${i.name}</span>`).join('');
+      return `<div class="day-detail-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${slot}</div>
+          </div>
+          <div style="display:flex;gap:2px">
+            ${meal && meal.method ? `<button class="btn btn-ghost btn-sm" onclick="toggleDayMethod('dm-${activeDow}-${slot}',this)">Steps</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="openPickModal(${activeDow},'${dayName}','${slot}')">Change</button>
+          </div>
+        </div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">${entry.meal_name}</div>
+        ${ings ? `<div style="margin-bottom:4px">${ings}</div>` : ''}
+        ${meal && meal.method ? `<div id="dm-${activeDow}-${slot}" style="display:none;margin-top:8px;font-size:13px;line-height:1.8;color:var(--muted);white-space:pre-line">${meal.method}</div>` : ''}
+      </div>`;
+    }
+    return `<div class="day-detail-section" style="display:flex;align-items:center;gap:10px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${color};opacity:.3;flex-shrink:0"></div>
+      <div style="font-size:13px;color:var(--muted);flex:1">${slot}</div>
+      <button class="btn btn-ghost btn-sm" onclick="openPickModal(${activeDow},'${dayName}','${slot}')">+ Add</button>
     </div>`;
   }).join('');
 
-  panel.innerHTML = `<div class="day-detail"><div class="day-detail-body">${recipeCards}</div></div>`;
+  panel.innerHTML = `<div class="day-detail"><div class="day-detail-body">${rows}</div></div>`;
 }
 
 function toggleDayMethod(id, btn) {
